@@ -1,0 +1,38 @@
+<a class="skip" href="#main">Zum Inhalt · Skip to content</a>
+<header class="top">
+  <div class="top-inner">
+    <a id="brand" class="brand" href="#" aria-label="Craftionary">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-text"><span class="brand-name">Craftionary</span><span id="tagline" class="brand-tag"></span></span>
+    </a>
+    <form id="search-form" class="search" role="search" autocomplete="off">
+      <svg class="search-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
+      <input id="q" type="search" enterkeyhint="search" spellcheck="false" autocapitalize="off" autocorrect="off" aria-autocomplete="list" aria-controls="suggest" aria-expanded="false">
+      <div id="suggest" class="suggest" hidden></div>
+    </form>
+    <div class="top-tools">
+      <div class="lang" role="group" aria-label="Sprache · Language">
+        <button type="button" data-lang="de" aria-pressed="false">DE</button><button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <button id="btn-settings" class="icon-btn" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 2h4l.6 2.7 2 .9 2.4-1.5 2.8 2.8-1.5 2.4.9 2 2.8.7v4l-2.8.6-.9 2 1.5 2.4-2.8 2.8-2.4-1.5-2 .9L14 22h-4l-.6-2.8-2-.9-2.4 1.5-2.8-2.8 1.5-2.4-.9-2L0 14v-4l2.8-.6.9-2-1.5-2.4L5 2.2l2.4 1.5 2-.9zm2 6.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="hotbar-wrap">
+    <nav id="hotbar" class="hotbar"></nav>
+    <p id="hotbar-label" class="hotbar-label" aria-live="polite"></p>
+  </div>
+</header>
+<main id="main" class="main" tabindex="-1"></main>
+<div id="tip" class="tip" role="tooltip" hidden></div>
+<div id="toast" class="toast" role="status" hidden></div>
+<dialog id="picker" class="dlg" aria-labelledby="pick-title">
+  <div class="dlg-head"><h2 id="pick-title">Item</h2><button id="pick-close" class="btn btn--ghost" type="button">×</button></div>
+  <input id="pick-q" class="input" type="search" autocomplete="off" spellcheck="false" aria-label="Item">
+  <ul id="pick-list" class="pick-list"></ul>
+</dialog>
+<dialog id="settings" class="dlg dlg--wide" aria-labelledby="settings-title">
+  <div class="dlg-head"><h2 id="settings-title">Einstellungen</h2><button id="settings-close" class="btn btn--ghost" type="button">×</button></div>
+  <div id="settings-body"></div>
+</dialog>

@@ -1,0 +1,18 @@
+{
+  "name": "craftionary",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Rezept-Kompendium für Minecraft Java – fehlertolerante Suche DE/EN, alle Stationen, offline als PWA",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "build": "node tools/build_app.mjs",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "devDependencies": {
+    "@fontsource/atkinson-hyperlegible-next": "^5.2.6",
+    "@fontsource/pixelify-sans": "^5.2.5",
+    "esbuild": "^0.25.0",
+    "fflate": "^0.8.2"
+  }
+}
