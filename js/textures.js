@@ -232,7 +232,12 @@ class Assets {
 
   resolveTex(textures, name) {
     let v = name;
-    for (let i = 0; i < 12 && typeof v === 'string' && v.startsWith('#'); i++) v = textures[v.slice(1)];
+    for (let i = 0; i < 12 && typeof v === 'string'; i++) {
+      // heavy_core.json verweist mit "all" statt "#all": ein Name aus der Textur-Tabelle zählt auch ohne # als Verweis
+      const slot = v.startsWith('#') ? v.slice(1) : (textures && Object.hasOwn(textures, v) ? v : null);
+      if (slot == null) break;
+      v = textures[slot];
+    }
     if (typeof v === 'object' && v) v = v.sprite;
     return typeof v === 'string' ? v : null;
   }
@@ -707,4 +712,4 @@ class Renderer {
 }
 
 // Für Tests im Browser
-export const __test = { Assets, Renderer, unpack, specialQuads, transformationAffine, displayAffine, Affine };
+export const __test = { Assets, Renderer, unpack, specialQuads, transformationAffine, displayAffine, Affine, blockQuads };
