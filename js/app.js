@@ -691,6 +691,7 @@ class App {
   }
 
   suggest() {
+    clearTimeout(this.sgTimer);
     const q = this.$('#q');
     const box = this.$('#suggest');
     const raw = q.value;
@@ -698,7 +699,7 @@ class App {
     if (!raw.trim() || document.activeElement !== q) { this.closeSuggest(); return; }
     const lang = getLang();
     const res = search(this.index, raw, { lang, limit: 12 });
-    this.sugg = { res, sel: 0 };
+    this.sugg = { res, sel: 0, raw };
     const db = this.db;
     if (!res.results.length) {
       box.replaceChildren(h('p', { class: 'sg-none' }, t('noResults')));
@@ -727,6 +728,8 @@ class App {
 
   suggestKeys(e) {
     const box = this.$('#suggest');
+    // Enter kurz nach dem Tippen: Vorschläge zur aktuellen Eingabe sofort berechnen, nicht den Treffer von vorhin öffnen
+    if (e.key === 'Enter' && this.sugg && this.sugg.raw !== this.$('#q').value) this.suggest();
     if (box.hidden || !this.sugg || !this.sugg.res.results.length) return;
     const n = this.sugg.res.results.length;
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
