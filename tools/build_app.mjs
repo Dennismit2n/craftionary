@@ -155,7 +155,8 @@ const sw = `// Craftionary Service Worker – offline-fähig, Cache je Version
 const CACHE = 'craftionary-${version}';
 const PRECACHE = ${JSON.stringify(precache)};
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(PRECACHE)));
+  // cache: 'reload' am HTTP-Cache vorbei, sonst landen nach einem Deploy (Pages: max-age=600) alte Dateien im neuen Cache
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(PRECACHE.map((u) => new Request(u, { cache: 'reload' })))));
 });
 self.addEventListener('activate', (e) => {
   e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k.startsWith('craftionary-') && k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
