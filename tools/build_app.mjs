@@ -115,8 +115,10 @@ const head = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Craftionary</title>
 <meta name="description" content="${manifest.description}">
-<meta name="theme-color" content="#20262b">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#20262b">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f8f7">
 <meta name="color-scheme" content="light dark">
+<script>try{var t=JSON.parse(localStorage.getItem('craftionary.theme'));if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">

@@ -79,6 +79,7 @@
   --shadow: 0 1px 2px rgb(0 0 0 / .35), 0 8px 24px rgb(0 0 0 / .25);
   color-scheme: dark;
 }
+:root[data-theme="light"] { color-scheme: light; }
 
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -169,6 +170,14 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
 .icon-btn { width: 40px; height: 40px; border-radius: 8px; border: 2px solid var(--line); background: transparent; display: grid; place-items: center; cursor: pointer; }
 .icon-btn svg { width: 20px; height: 20px; }
 .icon-btn:hover, .lang button:hover { color: var(--accent); }
+/* Darstellungs-Knopf zeigt das Ziel: Sonne im Dunkeln, Mond im Hellen */
+.theme-btn .ico-sun { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-btn .ico-sun { display: block; }
+  :root:not([data-theme="light"]) .theme-btn .ico-moon { display: none; }
+}
+:root[data-theme="dark"] .theme-btn .ico-sun { display: block; }
+:root[data-theme="dark"] .theme-btn .ico-moon { display: none; }
 
 /* Hotbar mit neun Stationen */
 .hotbar-wrap {
@@ -622,6 +631,14 @@ li.is-sel > .sg-row { box-shadow: inset 3px 0 0 var(--accent); }
   .st-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .st-tile { grid-template-columns: 32px minmax(0, 1fr); column-gap: 8px; padding: 9px 10px; }
   .st-tile img { width: 32px; height: 32px; }
+}
+
+/* Schmale Handys: Schriftzug, Darstellung und Zahnrad passen nur ohne DE/EN in die Kopfzeile (Sprache steht in den Einstellungen) */
+@media (max-width: 420px) {
+  .top-tools .lang { display: none; }
+}
+@media (max-width: 360px) {
+  .brand-name { font-size: 1.2rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

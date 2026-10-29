@@ -23,6 +23,7 @@ const catRank = (c) => { const i = CAT_ORDER.indexOf(c); return i < 0 ? 99 : i; 
 const FUEL_CHOICES = ['coal', 'charcoal', 'coal_block', 'lava_bucket', 'blaze_rod', 'dried_kelp_block', 'oak_log', 'oak_planks', 'stick', 'bamboo'];
 const GLYPH_OF = { crafting: 'crafting', inventory: 'inventory', furnace: 'furnace', blast_furnace: 'blast_furnace', smoker: 'smoker',
   campfire: 'campfire', stonecutter: 'stonecutter', smithing: 'smithing', brewing: 'brewing' };
+const THEME_COLOR = { light: '#f6f8f7', dark: '#20262b' }; // Browserleiste, passend zu --surface
 const TEX_OF = { crafting: 'crafting_table', inventory: 'chest', furnace: 'furnace', blast_furnace: 'blast_furnace', smoker: 'smoker',
   campfire: 'campfire', stonecutter: 'stonecutter', smithing: 'smithing_table', brewing: 'brewing_stand' };
 
@@ -41,6 +42,7 @@ class App {
 
   // ======================================================================= Start
   async start() {
+    this.applyTheme(LS.get('theme', 'system'));
     setLang(detectLang());
     document.documentElement.lang = getLang();
     this.renderStatic();
@@ -118,7 +120,34 @@ class App {
     for (const b of document.querySelectorAll('[data-lang]')) b.setAttribute('aria-pressed', b.dataset.lang === lang ? 'true' : 'false');
     this.$('#btn-settings').setAttribute('aria-label', t('settings'));
     this.$('#btn-settings').title = t('settings');
+    const toTheme = this.effectiveTheme() === 'dark' ? t('themeToLight') : t('themeToDark');
+    this.$('#btn-theme').setAttribute('aria-label', toTheme);
+    this.$('#btn-theme').title = toTheme;
     this.$('#hotbar').setAttribute('aria-label', t('stations'));
+  }
+
+  // ======================================================================= Darstellung
+  effectiveTheme() {
+    const th = document.documentElement.dataset.theme;
+    if (th === 'light' || th === 'dark') return th;
+    return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  applyTheme(choice) {
+    const root = document.documentElement;
+    const fixed = choice === 'light' || choice === 'dark';
+    if (fixed) root.dataset.theme = choice;
+    else delete root.dataset.theme;
+    for (const m of document.querySelectorAll('meta[name="theme-color"]')) {
+      m.content = fixed ? THEME_COLOR[choice] : /dark/.test(m.getAttribute('media') || '') ? THEME_COLOR.dark : THEME_COLOR.light;
+    }
+  }
+
+  setTheme(choice) {
+    LS.set('theme', choice);
+    this.applyTheme(choice);
+    this.renderStatic();
+    if (this.$('#settings').open) this.renderSettings();
   }
 
   renderHotbar() {
@@ -627,6 +656,8 @@ class App {
     document.addEventListener('click', (e) => { if (!e.target.closest('#search-form')) this.closeSuggest(); });
     for (const b of document.querySelectorAll('[data-lang]')) b.addEventListener('click', () => this.setLanguage(b.dataset.lang));
     this.$('#btn-settings').addEventListener('click', () => this.openSettings());
+    this.$('#btn-theme').addEventListener('click', () => this.setTheme(this.effectiveTheme() === 'dark' ? 'light' : 'dark'));
+    matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => this.renderStatic());
     this.$('#brand').addEventListener('click', (e) => { e.preventDefault(); this.stack = []; this.go({ kind: 'home' }, ''); });
     window.addEventListener('hashchange', () => this.route());
     document.addEventListener('keydown', (e) => {
@@ -800,6 +831,11 @@ class App {
       h('h3', null, t('language')),
       h('div', { class: 'seg', role: 'group' },
         ['de', 'en'].map((l) => h('button', { type: 'button', class: lang === l ? 'is-on' : '', 'aria-pressed': lang === l ? 'true' : 'false', onClick: () => { this.setLanguage(l); this.renderSettings(); this.$('#settings-title').textContent = t('settings'); this.$('#settings-close').textContent = t('close'); } }, l === 'de' ? 'Deutsch' : 'English'))));
+    const theme = LS.get('theme', 'system');
+    const themeSection = h('section', { class: 'set-block' },
+      h('h3', null, t('theme')),
+      h('div', { class: 'seg', role: 'group', 'aria-label': t('theme') },
+        [['system', 'themeSystem'], ['light', 'themeLight'], ['dark', 'themeDark']].map(([m, key]) => h('button', { type: 'button', class: theme === m ? 'is-on' : '', 'aria-pressed': theme === m ? 'true' : 'false', onClick: () => this.setTheme(m) }, t(key)))));
     const install = this.installPrompt ? h('section', { class: 'set-block' }, h('button', { class: 'btn btn--accent', type: 'button', onClick: async () => { this.installPrompt.prompt(); this.installPrompt = null; this.renderSettings(); } }, t('install'))) : null;
     const about = h('section', { class: 'set-block' },
       h('h3', null, t('about')),
@@ -807,7 +843,7 @@ class App {
       h('p', { class: 'muted small' }, t('dataLine', { v: db.meta.version, dp: db.meta.dataPack, n: numberFmt(Object.keys(db.items).length), d: new Date(db.meta.built + 'T12:00:00').toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) })),
       h('p', { class: 'muted small' }, t('keys')),
       h('p', { class: 'disclaimer' }, t('disclaimer')));
-    fill(body, langSection, texSection, install, about);
+    fill(body, langSection, themeSection, texSection, install, about);
   }
 
   async importTextures(src) {
