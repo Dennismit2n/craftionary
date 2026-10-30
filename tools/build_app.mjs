@@ -13,6 +13,7 @@ const read = (p) => readFileSync(join(ROOT, p), 'utf8');
 
 const versions = JSON.parse(read('data/versions.json'));
 const dataFile = `data/${versions.default}.json`;
+const enchFile = `data/enchantments-${versions.default}.json`; // aus tools/build_enchants.mjs
 const body = read('src/body.html');
 const css = read('css/app.css');
 const pkg = JSON.parse(read('package.json'));
@@ -39,9 +40,11 @@ cpSync(join(ROOT, 'fonts'), join(PWA, 'fonts'), { recursive: true });
 mkdirSync(join(PWA, 'data'), { recursive: true });
 cpSync(join(ROOT, dataFile), join(PWA, dataFile));
 cpSync(join(ROOT, 'data/versions.json'), join(PWA, 'data/versions.json'));
+cpSync(join(ROOT, enchFile), join(PWA, enchFile));
 mkdirSync(join(ART, 'data'), { recursive: true });
 cpSync(join(ROOT, dataFile), join(ART, dataFile));
 cpSync(join(ROOT, 'data/versions.json'), join(ART, 'data/versions.json'));
+cpSync(join(ROOT, enchFile), join(ART, enchFile));
 
 const fontFace = `
 @font-face { font-family: "Pixelify Sans"; font-weight: 500; font-display: swap; src: url(fonts/pixelify-sans-latin-500-normal.woff2) format("woff2"); }

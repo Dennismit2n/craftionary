@@ -5,6 +5,7 @@ import { buildIndex, buildAliases, search } from './search.js';
 import { t, setLang, getLang, detectLang, numberFmt } from './i18n.js';
 import { Icons, initialsOf } from './icons.js';
 import { glyphUrl } from './glyphs.js';
+import { NETHERITE_SET, enchantable, pickEnchants, giveCommand } from './commands.js';
 import { h, fill, Ctx, recipeGui, legend, notes, chip, stationName, stationTitle, fmtSeconds, fmtTicks, arrow } from './ui.js';
 
 const LS = {
@@ -23,7 +24,8 @@ const catRank = (c) => { const i = CAT_ORDER.indexOf(c); return i < 0 ? 99 : i; 
 const FUEL_CHOICES = ['coal', 'charcoal', 'coal_block', 'lava_bucket', 'blaze_rod', 'dried_kelp_block', 'oak_log', 'oak_planks', 'stick', 'bamboo'];
 const GLYPH_OF = { crafting: 'crafting', inventory: 'inventory', furnace: 'furnace', blast_furnace: 'blast_furnace', smoker: 'smoker',
   campfire: 'campfire', stonecutter: 'stonecutter', smithing: 'smithing', brewing: 'brewing' };
-const THEME_COLOR = { light: '#f6f8f7', dark: '#20262b' }; // Browserleiste, passend zu --surface
+const roman = (n) => (n > 10 ? String(n) : ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][n]);
+const THEME_COLOR ={ light: '#f6f8f7', dark: '#20262b' }; // Browserleiste, passend zu --surface
 const TEX_OF = { crafting: 'crafting_table', inventory: 'chest', furnace: 'furnace', blast_furnace: 'blast_furnace', smoker: 'smoker',
   campfire: 'campfire', stonecutter: 'stonecutter', smithing: 'smithing_table', brewing: 'brewing_stand' };
 
@@ -51,6 +53,7 @@ class App {
       const vs = await fetch('data/versions.json').then((r) => r.json());
       const data = await fetch(`data/${vs.default}.json`).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
       this.db = new DB(data);
+      this.ench = await fetch(`data/enchantments-${vs.default}.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
       this.index = buildIndex(data.items, { aliases: buildAliases(data) });
     } catch (e) {
       console.error(e);
@@ -273,7 +276,47 @@ class App {
       this.tabBtn('make', `${t('tabMake')} (${recipes.length})`, tab),
       this.tabBtn('use', `${t('tabUse')} (${uses.length})`, tab));
     const body = tab === 'make' ? this.makeList(id, recipes) : this.useList(id, uses);
-    return h('div', { class: 'item-view' }, this.backBar(), head, this.textureBanner(), h('div', { class: 'item-bar' }, tabs, tab === 'make' && recipes.length ? qtyBox : null), body);
+    return h('div', { class: 'item-view' }, this.backBar(), head, this.commandBox(id), this.textureBanner(), h('div', { class: 'item-bar' }, tabs, tab === 'make' && recipes.length ? qtyBox : null), body);
+  }
+
+  // ----------------------------------------------------------------------- Befehle (/give)
+  commandBox(id) {
+    const it = this.db.items[id];
+    const lang = getLang();
+    const ench = this.ench;
+    const can = enchantable(ench, id);
+    const mode = LS.get('cmdMode', 'max');
+    const mining = LS.get('cmdMining', 'fortune');
+    const both = can.includes('fortune') && can.includes('silk_touch');
+    const seg = (key, cur, opts) => h('div', { class: 'seg seg--sm', role: 'group' },
+      opts.map(([v, label]) => h('button', { type: 'button', class: cur === v ? 'is-on' : '', 'aria-pressed': cur === v ? 'true' : 'false', onClick: () => { LS.set(key, v); this.render(); } }, label)));
+    const enchName = (k) => ench.enchantments[k].n[lang === 'de' ? 1 : 0];
+    const rows = [this.cmdRow(t('cmdPlain'), giveCommand(id, it, { count: this.qty }))];
+    if (can.length) {
+      const list = pickEnchants(ench, id, { mode, mining });
+      rows.push(this.cmdRow(t('cmdEnchanted'), giveCommand(id, it, { enchants: list }),
+        list.map(([k, l]) => `${enchName(k)} ${roman(l)}`).join(', ')));
+    }
+    const controls = can.length ? h('div', { class: 'cmd-ctrl' },
+      seg('cmdMode', mode, [['max', t('cmdModeMax')], ['op', t('cmdModeOp')]]),
+      both ? seg('cmdMining', mining, [['fortune', enchName('fortune')], ['silk_touch', enchName('silk_touch')]]) : null) : null;
+    let set = null;
+    if (NETHERITE_SET.includes(id) && ench) {
+      const cmds = NETHERITE_SET.map((sid) => [sid, giveCommand(sid, this.db.items[sid], { enchants: pickEnchants(ench, sid, { mode, mining }) })]);
+      set = h('details', { class: 'cmd-set' },
+        h('summary', null, t('netheriteSet', { n: cmds.length })),
+        h('button', { class: 'btn btn--tiny', type: 'button', onClick: (e) => this.copy(cmds.map(([, c]) => c).join('\n'), e.currentTarget) }, t('copyAll')),
+        ...cmds.map(([sid, c]) => this.cmdRow(this.db.name(sid, lang), c)));
+    }
+    return h('section', { class: 'cmd-box' }, h('div', { class: 'cmd-head' }, h('h2', { class: 'block-title' }, t('commands')), controls), ...rows, set, h('p', { class: 'muted small' }, t('cmdHint')));
+  }
+
+  cmdRow(label, cmd, note = null) {
+    return h('div', { class: 'cmd-row' },
+      h('span', { class: 'cmd-label' }, label),
+      h('code', { class: 'cmd' }, cmd),
+      h('button', { class: 'btn btn--tiny', type: 'button', onClick: (e) => this.copy(cmd, e.currentTarget) }, t('copy')),
+      note ? h('p', { class: 'cmd-note muted small' }, note) : null);
   }
 
   tabBtn(key, label, cur) {

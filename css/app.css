@@ -415,6 +415,26 @@ li.is-sel > .sg-row { box-shadow: inset 3px 0 0 var(--accent); }
 .seg { display: inline-flex; border: 2px solid var(--line); border-radius: 8px; overflow: hidden; }
 .seg button { border: 0; background: transparent; padding: 6px 12px; cursor: pointer; font-weight: 700; color: var(--muted); }
 .seg button.is-on { background: var(--ink); color: var(--surface); }
+.seg--sm button { padding: 4px 9px; font-size: .85rem; }
+
+/* Befehle (/give) */
+.cmd-box { margin: 16px 0; padding: 14px 16px; background: var(--surface); border: 2px solid var(--line); border-radius: var(--r-md); }
+.cmd-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 8px; }
+.cmd-head .block-title { margin: 0; }
+.cmd-ctrl { display: flex; flex-wrap: wrap; gap: 8px; }
+.cmd-row { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); }
+.cmd-label { font-weight: 700; color: var(--muted); font-size: .9rem; }
+.cmd { font-family: var(--font-mono); font-size: .85rem; overflow-wrap: anywhere; background: var(--surface-2); padding: 4px 8px; border-radius: var(--r-sm); }
+.cmd-note { grid-column: 2 / -1; margin: 0; }
+.cmd-set { margin-top: 6px; border-top: 1px solid var(--line); padding-top: 8px; }
+.cmd-set summary { cursor: pointer; font-weight: 700; padding: 4px 0; }
+.cmd-set > .btn { margin: 6px 0; }
+.cmd-box > .small:last-child { margin: 8px 0 0; }
+@media (max-width: 520px) {
+  .cmd-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .cmd-label { grid-column: 1 / -1; }
+  .cmd-note { grid-column: 1 / -1; }
+}
 
 .uses { display: grid; gap: 20px; }
 .use-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 4px 12px; }
