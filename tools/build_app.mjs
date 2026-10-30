@@ -127,7 +127,8 @@ const head = `<!doctype html>
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#20262b">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f8f7">
 <meta name="color-scheme" content="light dark">
-<script>try{var t=JSON.parse(localStorage.getItem('craftionary.theme'));if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<script>try{var t=JSON.parse(localStorage.getItem('craftionary.theme'));if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}
+addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.cfInstall=e;if(window.cfOnInstall)window.cfOnInstall()});</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">

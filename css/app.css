@@ -172,6 +172,12 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
 .lang-btn span { color: var(--muted); }
 .lang-btn span.is-on { color: var(--ink); text-decoration: underline 2px var(--accent); text-underline-offset: 4px; }
 .lang-btn:hover span { color: var(--accent); }
+/* Knopf „Installieren“: erscheint nur, wenn der Browser die App anbietet (nie in der installierten App).
+   Breit: zweite Zeile unter den Knöpfen rechts. Schmal: eigene volle Zeile unter der Suche.
+   Getönt statt voll gefüllt, damit er im Dunkeln nicht grell leuchtet. */
+.install-btn { grid-column: 3; grid-row: 2; justify-self: end; background: var(--accent-soft); border-color: var(--accent); color: var(--ink); font-weight: 700; }
+.install-btn svg { width: 18px; height: 18px; color: var(--accent); }
+.install-btn:hover { border-color: var(--ink); }
 /* Darstellungs-Knopf zeigt das Ziel: Sonne im Dunkeln, Mond im Hellen */
 .theme-btn .ico-sun { display: none; }
 @media (prefers-color-scheme: dark) {
@@ -718,6 +724,7 @@ li.is-sel > .sg-row { box-shadow: inset 3px 0 0 var(--accent); }
 @media (max-width: 760px) {
   .top-inner { grid-template-columns: minmax(0, 1fr) auto; row-gap: 10px; }
   .search { grid-column: 1 / -1; grid-row: 2; }
+  .install-btn { grid-column: 1 / -1; grid-row: 3; justify-self: stretch; }
   .brand-tag { display: none; }
   .hotbar-wrap { justify-content: center; }
   .hotbar { --hs: min(40px, calc((100vw - 40px) / 9)); }

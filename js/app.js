@@ -127,6 +127,7 @@ class App {
     for (const s of document.querySelectorAll('#btn-lang [data-l]')) s.classList.toggle('is-on', s.dataset.l === lang);
     this.$('#btn-lang').setAttribute('aria-label', t('langSwitch'));
     this.$('#btn-lang').title = t('langSwitch');
+    this.$('#btn-install-label').textContent = t('installShort');
     this.$('#btn-settings').setAttribute('aria-label', t('settings'));
     this.$('#btn-settings').title = t('settings');
     const toTheme = this.effectiveTheme() === 'dark' ? t('themeToLight') : t('themeToDark');
@@ -1003,7 +1004,27 @@ class App {
     document.addEventListener('pointerout', (e) => { if (e.target.closest('[data-tip]') && !e.relatedTarget?.closest?.('[data-tip]')) tip.hidden = true; });
     this.$('#pick-close').addEventListener('click', () => this.$('#picker').close());
     this.$('#settings-close').addEventListener('click', () => this.$('#settings').close());
-    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); this.installPrompt = e; });
+    // Installieren: Das Ereignis fängt schon das Kopf-Skript auf (window.cfInstall), weil der Browser es
+    // melden kann, bevor app.js geladen ist. Ein Ereignis = ein Dialog, danach ist der Knopf weg.
+    window.cfOnInstall = () => this.syncInstall();
+    this.$('#btn-install').addEventListener('click', () => this.runInstall());
+    window.addEventListener('appinstalled', () => { window.cfInstall = null; this.syncInstall(); this.toast(t('installed')); });
+    this.syncInstall();
+  }
+
+  syncInstall() {
+    const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+    this.installPrompt = standalone ? null : window.cfInstall || null;
+    this.$('#btn-install').hidden = !this.installPrompt;
+    if (this.$('#settings').open) this.renderSettings();
+  }
+
+  async runInstall() {
+    const ev = this.installPrompt;
+    if (!ev) return;
+    window.cfInstall = null;
+    this.syncInstall();
+    try { await ev.prompt(); } catch { /* Dialog schon verbraucht */ }
   }
 
   showTip(el, e) {
@@ -1160,7 +1181,7 @@ class App {
       h('h3', null, t('theme')),
       h('div', { class: 'seg', role: 'group', 'aria-label': t('theme') },
         [['system', 'themeSystem'], ['light', 'themeLight'], ['dark', 'themeDark']].map(([m, key]) => h('button', { type: 'button', class: theme === m ? 'is-on' : '', 'aria-pressed': theme === m ? 'true' : 'false', onClick: () => this.setTheme(m) }, t(key)))));
-    const install = this.installPrompt ? h('section', { class: 'set-block' }, h('button', { class: 'btn btn--accent', type: 'button', onClick: async () => { this.installPrompt.prompt(); this.installPrompt = null; this.renderSettings(); } }, t('install'))) : null;
+    const install = this.installPrompt ? h('section', { class: 'set-block' }, h('button', { class: 'btn btn--accent', type: 'button', onClick: () => this.runInstall() }, t('install'))) : null;
     const about = h('section', { class: 'set-block' },
       h('h3', null, t('about')),
       h('p', null, t('aboutText', { r: numberFmt(db.recipes.length), v: db.meta.version })),
