@@ -7,6 +7,7 @@ import { Icons, initialsOf } from './icons.js';
 import { glyphUrl } from './glyphs.js';
 import { NETHERITE_SET, enchantable, pickEnchants, giveCommand } from './commands.js';
 import { oreProfiles, featuresFor, veinsFor, fmtPct, fmtCount, fmtY } from './sources.js';
+import { MAX_LAYERS, POT_SIDES, POT_SLOT, isBannerPage, isPotPage, patternName, bannerCommand, shieldCommand, potCommand, tooLongForChat, loomSteps, draftFor, potFor, paintFace } from './patterns.js';
 import { h, fill, Ctx, recipeGui, legend, notes, chip, stationName, stationTitle, fmtSeconds, fmtTicks, arrow } from './ui.js';
 
 const LS = {
@@ -56,6 +57,7 @@ class App {
       this.db = new DB(data);
       this.ench = await fetch(`data/enchantments-${vs.default}.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
       this.src = await fetch(`data/sources-${vs.default}.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+      this.pat = await fetch(`data/patterns-${vs.default}.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
       this.index = buildIndex(data.items, { aliases: buildAliases(data) });
     } catch (e) {
       console.error(e);
@@ -122,7 +124,9 @@ class App {
     q.placeholder = t('searchPlaceholder');
     q.setAttribute('aria-label', t('searchLabel'));
     this.$('#tagline').textContent = t('tagline', { v: this.db ? this.db.meta.version : '' });
-    for (const b of document.querySelectorAll('[data-lang]')) b.setAttribute('aria-pressed', b.dataset.lang === lang ? 'true' : 'false');
+    for (const s of document.querySelectorAll('#btn-lang [data-l]')) s.classList.toggle('is-on', s.dataset.l === lang);
+    this.$('#btn-lang').setAttribute('aria-label', t('langSwitch'));
+    this.$('#btn-lang').title = t('langSwitch');
     this.$('#btn-settings').setAttribute('aria-label', t('settings'));
     this.$('#btn-settings').title = t('settings');
     const toTheme = this.effectiveTheme() === 'dark' ? t('themeToLight') : t('themeToDark');
@@ -280,7 +284,14 @@ class App {
       this.tabBtn('use', `${t('tabUse')} (${uses.length})`, tab),
       this.src ? this.tabBtn('find', `${t('tabFind')} (${finds})`, tab) : null);
     const body = tab === 'make' ? this.makeList(id, recipes) : tab === 'find' ? this.findList(id) : this.useList(id, uses);
-    return h('div', { class: 'item-view' }, this.backBar(), head, this.commandBox(id), this.textureBanner(), h('div', { class: 'item-bar' }, tabs, tab === 'make' && recipes.length ? qtyBox : null), body);
+    // Auf ganz schmalen Handys lassen sich die Reiter schieben: der gewählte soll ganz zu sehen sein
+    requestAnimationFrame(() => {
+      const on = tabs.querySelector('.is-on');
+      if (!on || tabs.scrollWidth <= tabs.clientWidth) return;
+      const r = on.getBoundingClientRect(), box = tabs.getBoundingClientRect();
+      if (r.right > box.right) tabs.scrollLeft += r.right - box.right;
+    });
+    return h('div', { class: 'item-view' }, this.backBar(), head, this.commandBox(id), this.patternBox(id), this.textureBanner(), h('div', { class: 'item-bar' }, tabs, tab === 'make' && recipes.length ? qtyBox : null), body);
   }
 
   // ----------------------------------------------------------------------- Befehle (/give)
@@ -313,6 +324,135 @@ class App {
         ...cmds.map(([sid, c]) => this.cmdRow(this.db.name(sid, lang), c)));
     }
     return h('section', { class: 'cmd-box' }, h('div', { class: 'cmd-head' }, h('h2', { class: 'block-title' }, t('commands')), controls), ...rows, set, h('p', { class: 'muted small' }, t('cmdHint')));
+  }
+
+  // ----------------------------------------------------------------------- Muster (Webstuhl, Schild, Krug)
+  patternBox(id) {
+    const pat = this.pat;
+    if (!pat) return null;
+    const kind = isBannerPage(pat, id) ? 'banner' : isPotPage(pat, id) ? 'pot' : null;
+    if (!kind) return null;
+    const v = this.view;
+    if (kind === 'banner') v.draft ??= draftFor(pat, id, LS.get('patDraft'));
+    else v.pot ??= potFor(pat, id, LS.get('patPot'));
+    const body = h('div', { class: 'pat-body' });
+    // Änderungen zeichnen nur die Werkstatt neu (nicht die ganze Seite), der Fokus bleibt am bedienten Element
+    const draw = (focus) => {
+      fill(body, kind === 'banner' ? this.bannerWorkshop(v.draft, draw) : this.potWorkshop(v.pot, draw));
+      if (focus) body.querySelector(`[data-k="${focus}"]`)?.focus();
+    };
+    draw();
+    const box = h('details', { class: 'pat-box', open: LS.get('patOpen', true) },
+      h('summary', null, h('h2', { class: 'block-title' }, t(kind === 'banner' ? 'patBanner' : 'patPot'))), body);
+    box.addEventListener('toggle', () => LS.set('patOpen', box.open));
+    return box;
+  }
+
+  /** Text mit Platzhaltern, in die Elemente (z. B. Item-Links) eingesetzt werden */
+  tEl(key, vars) {
+    return t(key).split(/(\{\w+\})/).map((part) => { const m = /^\{(\w+)\}$/.exec(part); return m ? vars[m[1]] ?? '' : part; });
+  }
+
+  itemLink(id, label = null) {
+    return h('button', { class: 'link-btn', type: 'button', onClick: () => this.openItem(id) }, label || this.db.fullName(id, getLang()));
+  }
+
+  texHint(text) {
+    return h('div', { class: 'pat-hint' }, h('p', { class: 'muted small' }, text),
+      h('button', { class: 'btn btn--tiny', type: 'button', onClick: () => this.openSettings('textures') }, t('patLoadTex')));
+  }
+
+  bannerWorkshop(d, draw) {
+    const pat = this.pat, db = this.db, lang = getLang();
+    const colors = db.data.dyeColors;
+    const save = (focus) => { LS.set('patDraft', d); draw(focus); };
+    const dyeName = (c) => db.name(`${c}_dye`, lang);
+    const hex = (c) => '#' + colors[c].toString(16).padStart(6, '0');
+    const base = h('div', { class: 'swatches', role: 'group', 'aria-label': t('patBase') },
+      pat.colors.map((c) => h('button', { type: 'button', class: `swatch${d.base === c ? ' is-on' : ''}`, style: { background: hex(c) }, title: dyeName(c), 'aria-label': dyeName(c),
+        'aria-pressed': d.base === c ? 'true' : 'false', dataset: { k: `b-${c}` }, onClick: () => { d.base = c; save(`b-${c}`); } })));
+    const move = (i, j) => { const [x] = d.layers.splice(i, 1); d.layers.splice(j, 0, x); save(`p${j}`); };
+    const rows = d.layers.map((l, i) => {
+      const opt = (b) => h('option', { value: b.id, selected: b.id === l.p }, patternName(pat, b.id, l.c, lang));
+      return h('li', { class: 'pat-layer' },
+        h('span', { class: 'pat-dot', style: { background: hex(l.c) }, 'aria-hidden': 'true' }),
+        h('select', { class: 'pat-sel', 'aria-label': t('patLayer', { n: i + 1 }), dataset: { k: `p${i}` }, onChange: (e) => { l.p = e.target.value; save(`p${i}`); } },
+          h('optgroup', { label: t('patFree') }, pat.banner.filter((b) => !b.item).map(opt)),
+          h('optgroup', { label: t('patWithItem') }, pat.banner.filter((b) => b.item).map(opt))),
+        h('select', { class: 'pat-col', 'aria-label': t('patColor', { n: i + 1 }), dataset: { k: `c${i}` }, onChange: (e) => { l.c = e.target.value; save(`c${i}`); } },
+          pat.colors.map((c) => h('option', { value: c, selected: c === l.c }, dyeName(c)))),
+        h('span', { class: 'pat-tools' },
+          h('button', { class: 'btn btn--tiny', type: 'button', disabled: i === 0, title: t('patUp'), 'aria-label': t('patUp'), onClick: () => move(i, i - 1) }, '↑'),
+          h('button', { class: 'btn btn--tiny', type: 'button', disabled: i === d.layers.length - 1, title: t('patDown'), 'aria-label': t('patDown'), onClick: () => move(i, i + 1) }, '↓'),
+          h('button', { class: 'btn btn--tiny', type: 'button', title: t('patRemove'), 'aria-label': t('patRemove'), onClick: () => { d.layers.splice(i, 1); save('add'); } }, '✕')));
+    });
+    const addLayer = () => {
+      const last = d.layers[d.layers.length - 1];
+      d.layers.push({ p: 'stripe_center', c: last ? last.c : d.base === 'black' ? 'white' : 'black' });
+      save(`p${d.layers.length - 1}`);
+    };
+    const edit = h('div', { class: 'pat-edit' },
+      h('p', { class: 'pat-label' }, t('patBase')), base,
+      h('p', { class: 'pat-label' }, t('patLayers', { n: d.layers.length, max: MAX_LAYERS })),
+      rows.length ? h('ol', { class: 'pat-layers' }, rows) : h('p', { class: 'muted small' }, t('patEmpty')),
+      h('div', { class: 'pat-actions' },
+        h('button', { class: 'btn btn--tiny', type: 'button', disabled: d.layers.length >= MAX_LAYERS, dataset: { k: 'add' }, onClick: addLayer }, t('patAdd')),
+        d.layers.length ? h('button', { class: 'btn btn--tiny btn--ghost', type: 'button', onClick: () => { d.layers = []; save('add'); } }, t('patClear')) : null));
+    // Vorschau aus den Original-Texturen (Banner- und Schild-Vorderseite)
+    let prev;
+    if (this.icons.hasPatterns) {
+      const cvB = h('canvas', { class: 'pat-cv pat-cv--banner', width: 20, height: 40 });
+      const cvS = h('canvas', { class: 'pat-cv pat-cv--shield', width: 12, height: 22 });
+      const label = [db.name(`${d.base}_banner`, lang), ...d.layers.map((l) => patternName(pat, l.p, l.c, lang))].join(', ');
+      prev = h('div', { class: 'pat-prev', role: 'img', 'aria-label': `${t('patPreview')}: ${label}` },
+        h('figure', null, cvB, h('figcaption', null, db.name(`${d.base}_banner`, lang))),
+        h('figure', null, cvS, h('figcaption', null, db.name('shield', lang))));
+      const url = (k) => this.icons.url(k);
+      paintFace(cvB, 'banner', d, pat, colors, url);
+      paintFace(cvS, 'shield', d, pat, colors, url);
+    } else {
+      prev = this.texHint(t(this.icons.available ? 'patOldTex' : 'patNoTex'));
+    }
+    const steps = loomSteps(pat, d.base, d.layers).map((s) => (s.kind === 'craft'
+      ? h('li', null, this.tEl('patStepCraft', { banner: this.itemLink(s.item) }))
+      : h('li', null, this.tEl('patStepLoom', {
+        loom: this.itemLink('loom'), dye: this.itemLink(s.dye),
+        item: s.item ? [' + ', this.itemLink(s.item)] : '',
+        result: h('strong', null, patternName(pat, s.p, s.c, lang)),
+        kept: s.item ? ` ${t('patItemKept')}` : '' }))));
+    steps.push(h('li', null, this.tEl('patStepShield', { shield: this.itemLink('shield') })));
+    const cmds = [[db.name(`${d.base}_banner`, lang), bannerCommand(d.base, d.layers)], [db.name('shield', lang), shieldCommand(d.base, d.layers)]];
+    return [
+      h('div', { class: 'pat-grid' }, prev, edit),
+      h('h3', { class: 'pat-sub' }, t('patSteps')),
+      h('ol', { class: 'pat-steps' }, steps),
+      h('h3', { class: 'pat-sub' }, t('commands')),
+      cmds.map(([label, c]) => this.cmdRow(label, c, tooLongForChat(c) ? t('cmdTooLong', { n: c.length }) : null)),
+    ];
+  }
+
+  potWorkshop(d, draw) {
+    const pat = this.pat, db = this.db, lang = getLang();
+    const save = (focus) => { LS.set('patPot', d); draw(focus); };
+    const choices = ['brick', ...pat.sherds];
+    const grid = h('div', { class: 'pot-grid', role: 'img', 'aria-label': `${t('patGrid')}: ${POT_SIDES.map((s) => `${t('pot_' + s)} ${db.name(d[s], lang)}`).join(', ')}` },
+      Array.from({ length: 9 }, (_, i) => {
+        const side = POT_SIDES.find((s) => POT_SLOT[s] === i);
+        return h('span', { class: 'slot' }, side ? this.icons.el(d[side], { initials: initialsOf(db.name(d[side], lang)) }) : null);
+      }));
+    const sides = h('div', { class: 'pot-sides' }, POT_SIDES.map((s) => h('label', { class: 'pot-side' },
+      h('span', { class: 'pat-label' }, t('pot_' + s)),
+      h('select', { dataset: { k: s }, onChange: (e) => { d[s] = e.target.value; save(s); } },
+        choices.map((c) => h('option', { value: c, selected: d[s] === c }, db.name(c, lang)))))));
+    const used = [...new Set(POT_SIDES.map((s) => d[s]).filter((x) => x !== 'brick'))];
+    const c = potCommand(d);
+    return [
+      h('div', { class: 'pot-wrap' }, grid, sides),
+      h('p', { class: 'muted small' }, t('potHint')),
+      used.length ? h('p', { class: 'small' }, t('potSherds'), ' ', used.map((x, i) => [i ? ', ' : '', this.itemLink(x)])) : null,
+      h('h3', { class: 'pat-sub' }, t('commands')),
+      this.cmdRow(db.name('decorated_pot', lang), c),
+    ];
   }
 
   // ----------------------------------------------------------------------- Fundorte
@@ -838,7 +978,7 @@ class App {
     q.addEventListener('keydown', (e) => this.suggestKeys(e));
     this.$('#search-form').addEventListener('submit', (e) => { e.preventDefault(); this.runQuery(q.value); });
     document.addEventListener('click', (e) => { if (!e.target.closest('#search-form')) this.closeSuggest(); });
-    for (const b of document.querySelectorAll('[data-lang]')) b.addEventListener('click', () => this.setLanguage(b.dataset.lang));
+    this.$('#btn-lang').addEventListener('click', () => this.setLanguage(getLang() === 'de' ? 'en' : 'de'));
     this.$('#btn-settings').addEventListener('click', () => this.openSettings());
     this.$('#btn-theme').addEventListener('click', () => this.setTheme(this.effectiveTheme() === 'dark' ? 'light' : 'dark'));
     matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => this.renderStatic());
@@ -995,7 +1135,7 @@ class App {
     const mb = Math.round(db.meta.clientSize / 1e6);
     const preview = !!window.CRAFTIONARY_PREVIEW; // Vorschau-Seite: fremde Downloads sind dort gesperrt
     const status = this.icons.available
-      ? h('p', { class: 'ok' }, t('texturesOn', { n: numberFmt(this.icons.urls.size), v: this.icons.meta?.version || db.meta.version }))
+      ? h('p', { class: 'ok' }, t('texturesOn', { n: numberFmt(this.icons.count), v: this.icons.meta?.version || db.meta.version }))
       : h('p', null, t('texturesOff'));
     const fileInput = h('input', { id: 'tex-file', type: 'file', accept: '.jar,.zip,application/java-archive,application/zip', class: 'visually-hidden' });
     fileInput.addEventListener('change', () => { if (fileInput.files[0]) this.importTextures({ file: fileInput.files[0] }); });
@@ -1047,12 +1187,13 @@ class App {
         else if (stage === 'unpack') set(0.5, t('texturesProgressUnpack'));
         else if (stage === 'render') set(0.5 + 0.5 * (a / b), t('texturesProgressRender', { n: a, t: b }));
       });
-      await this.icons.save(res.icons, { version: res.version, count: res.icons.size, date: new Date().toISOString() });
-      set(1, t('texturesDone', { n: numberFmt(res.icons.size) }));
+      const n = [...res.icons.keys()].filter((k) => !k.startsWith('pat:')).length;
+      await this.icons.save(res.icons, { version: res.version, count: n, date: new Date().toISOString() });
+      set(1, t('texturesDone', { n: numberFmt(n) }));
       this.importing = false;
       this.renderSettings();
       // Bei offenem Dialog steht der Status schon dort; ein Toast läge hinter dem Dialog
-      if (!this.$('#settings').open) this.toast(t('texturesDone', { n: numberFmt(res.icons.size) }));
+      if (!this.$('#settings').open) this.toast(t('texturesDone', { n: numberFmt(n) }));
     } catch (e) {
       console.error(e);
       const msg = e && e.code === 'WRONG_FILE' ? t('texturesWrongFile', { v: this.db.meta.version })

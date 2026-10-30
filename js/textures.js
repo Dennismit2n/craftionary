@@ -2,6 +2,7 @@
 // Icons wie im Inventar zeichnen. Läuft komplett im Browser; es werden keine Grafiken mitgeliefert.
 
 import { unzip, unzipSync } from 'fflate';
+import { FACE } from './patterns.js';
 
 const NEED = /^(version\.json|assets\/minecraft\/(items|models)\/.+\.json|assets\/minecraft\/textures\/(item|block|entity|colormap)\/.+\.(png|mcmeta))$/;
 const SIZE = 128; // Pixel je Icon (8 Bildschirmpixel pro Texel)
@@ -46,7 +47,28 @@ export async function importTextures(db, src, progress = () => {}) {
     }
   }
   progress('render', ids.length, ids.length);
+  // Muster-Vorschau: Vorderseite jeder Banner- und Schild-Textur ausschneiden, patterns.js färbt und stapelt sie
+  for (const path of files.keys()) {
+    const m = /^assets\/minecraft\/textures\/entity\/(banner|shield)\/([a-z0-9_]+)\.png$/.exec(path);
+    if (!m) continue;
+    try {
+      const c = await faceCrop(assets, `entity/${m[1]}/${m[2]}`, FACE[m[1]]);
+      if (c) icons.set(`pat:${m[1]}:${m[2]}`, await toBlob(c));
+    } catch (e) {
+      console.warn('[muster]', path, e);
+    }
+  }
   return { icons, version };
+}
+
+/** Ausschnitt [x, y, w, h] in 64er-Texturpixeln, bei höher aufgelösten Texturen mitskaliert */
+async function faceCrop(assets, ref, [x, y, w, h]) {
+  const tex = await assets.texture(ref, { full: true });
+  if (!tex) return null;
+  const k = tex.width / 64;
+  const c = makeCanvas(w * k, h * k);
+  c.getContext('2d').drawImage(tex, x * k, y * k, w * k, h * k, 0, 0, w * k, h * k);
+  return c;
 }
 
 async function download(meta, progress) {

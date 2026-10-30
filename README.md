@@ -15,6 +15,10 @@ Recipe compendium for **Minecraft Java 26.3** as an installable web app (PWA) fo
 | Darstellung | Jedes Rezept im Fenster wie im Spiel, mit der Platzierung des Rezeptbuchs (schmale Rezepte mittig) |
 | Rezeptbuch | Pro Station alle Rezepte mit Reitern und Filter, dazu „Selbst legen“: Items in die Felder legen, die App sagt, was rauskommt |
 | Materialliste | Direkt oder bis zu den Grundstoffen aufgelöst, inklusive Resten |
+| Befehle | Fertige `/give`-Befehle je Item, verzaubert auf Spiel-Maximum oder übertrieben, dazu das komplette Netherite-Set |
+| Fundorte | Erz-Höhen als Kurve mit bester Höhe, Block- und Kreatur-Drops, Truhen in Strukturen mit Biomen, Angeln, Handel – mit genauen Chancen |
+| Muster | Banner und Schild am Webstuhl gestalten (bis zu 6 Muster, Vorschau, Arbeitsschritte, Befehl), Verzierten Krug aus Scherben zusammenstellen |
+| Bedienung | Hell/Dunkel und Deutsch/Englisch mit einem Tipp in der Kopfzeile |
 | Offline | Nach dem ersten Besuch funktioniert alles ohne Netz |
 
 Die Daten (2.087 Rezepte, 1.842 Items inklusive aller Tränke und Pfeile) stammen direkt aus Mojangs offiziellen Spieldateien. Die deutschen Namen kommen aus der offiziellen Sprachdatei `de_de.json`, die Fenstertitel ebenfalls („Handwerk“, „Ausrüstung aufwerten“).
@@ -45,7 +49,7 @@ Voraussetzungen: Node.js 20+, Python 3.10+, für den Daten-Generator Java 25.
 
 ```bash
 npm install
-npm test                 # 116 Tests: Suche, Platzierung, Mengen, Brauen, alle Rezepte
+npm test                 # 147 Tests: Suche, Platzierung, Mengen, Brauen, alle Rezepte, Befehle, Fundorte, Muster
 npm run build            # → dist/pwa (installierbar) und dist/artifact (Vorschau-Seite)
 ```
 
@@ -53,6 +57,9 @@ Neue Minecraft-Version einlesen:
 
 ```bash
 python3 tools/build_data.py --version 26.3 --work ./_mc --java /pfad/zu/java25/bin/java
+node tools/build_enchants.mjs   # Verzauberungen für die Befehle
+node tools/build_sources.mjs    # Fundorte: Erz-Höhen, Loot-Tabellen, Handel
+node tools/build_patterns.mjs   # Bannermuster und Krugscherben
 npm run build
 ```
 
@@ -67,6 +74,8 @@ Ohne `--version` nimmt das Skript das neueste Release. Es lädt Client- und Serv
 | `js/textures.js` | Liest die Jar im Browser und zeichnet die Icons nach den Modell- und Item-Definitionen des Spiels |
 | `js/app.js`, `js/ui.js` | Oberfläche und Spielfenster |
 | `tools/build_data.py` | Datenextraktor |
+| `tools/build_*.mjs`, `tools/mojang.mjs` | Verzauberungen, Fundorte und Muster direkt aus der Jar (ohne Java) |
+| `js/commands.js`, `js/sources.js`, `js/patterns.js` | Befehle, Fundorte, Muster-Werkstatt |
 | `tools/build_app.mjs` | Build mit esbuild, Service Worker und Manifest |
 | `icons/` | App-Icons als PNG (eigenes Motiv: 3×3-Raster; neu erzeugen mit `npm i -D sharp`, dann die PNGs löschen und bauen) |
 | `dev/` | Prüfseiten für die Icon-Darstellung (brauchen eine lokale Jar unter `dev/jar/client.jar`) |
@@ -90,6 +99,10 @@ Rezeptdaten und Item-Namen stammen aus Minecraft, © Mojang AB/Microsoft.
 | Display | Every recipe in an in-game style window, placed like the recipe book does |
 | Recipe book | All recipes per station with tabs and filter, plus “Place items”: put items in the slots and see what comes out |
 | Materials | Direct or broken down to raw materials, including leftovers |
+| Commands | Ready `/give` commands per item, enchanted to the game maximum or overpowered, plus the full netherite set |
+| Where to find | Ore heights as a curve with the best level, block and mob drops, structure chests with biomes, fishing, trading – with exact chances |
+| Patterns | Design banners and shields at the loom (up to 6 patterns, preview, steps, command), arrange decorated pots from sherds |
+| Controls | Light/dark and German/English with one tap in the header |
 | Offline | Works without a connection after the first visit |
 
 ### Original textures
@@ -107,6 +120,7 @@ npm install
 npm test
 npm run build
 python3 tools/build_data.py --version 26.3 --work ./_mc --java /path/to/java25/bin/java   # new game version
+node tools/build_enchants.mjs && node tools/build_sources.mjs && node tools/build_patterns.mjs
 ```
 
 ### Legal

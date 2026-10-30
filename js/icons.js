@@ -82,6 +82,12 @@ export class Icons {
 
   get available() { return this.urls.size > 0; }
 
+  /** Anzahl Item-Icons (ohne die Muster-Ausschnitte „pat:…“) */
+  get count() { let n = 0; for (const k of this.urls.keys()) if (!k.startsWith('pat:')) n++; return n; }
+
+  /** Muster-Ausschnitte für die Vorschau vorhanden? Fehlen bei Texturen, die vor der Muster-Werkstatt geladen wurden. */
+  get hasPatterns() { return this.urls.has('pat:banner:base'); }
+
   async init() {
     try {
       this.db = await idb();

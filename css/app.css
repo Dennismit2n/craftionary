@@ -164,12 +164,14 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
 #q::placeholder { color: var(--muted); opacity: .9; }
 
 .top-tools { display: flex; gap: 8px; align-items: center; }
-.lang { display: inline-flex; border: 2px solid var(--line); border-radius: 8px; overflow: hidden; }
-.lang button { border: 0; background: transparent; padding: 6px 9px; font-weight: 700; font-size: .85rem; cursor: pointer; color: var(--muted); }
-.lang button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
 .icon-btn { width: 40px; height: 40px; border-radius: 8px; border: 2px solid var(--line); background: transparent; display: grid; place-items: center; cursor: pointer; }
 .icon-btn svg { width: 20px; height: 20px; }
-.icon-btn:hover, .lang button:hover { color: var(--accent); }
+.icon-btn:hover { color: var(--accent); }
+/* Sprach-Knopf: beide Kürzel sichtbar, die aktive Sprache hervorgehoben; ein Tipp wechselt */
+.lang-btn { width: auto; display: inline-flex; gap: 5px; padding: 0 8px; font-weight: 700; font-size: .85rem; letter-spacing: .02em; }
+.lang-btn span { color: var(--muted); }
+.lang-btn span.is-on { color: var(--ink); text-decoration: underline 2px var(--accent); text-underline-offset: 4px; }
+.lang-btn:hover span { color: var(--accent); }
 /* Darstellungs-Knopf zeigt das Ziel: Sonne im Dunkeln, Mond im Hellen */
 .theme-btn .ico-sun { display: none; }
 @media (prefers-color-scheme: dark) {
@@ -364,10 +366,13 @@ li.is-sel > .sg-row { box-shadow: inset 3px 0 0 var(--accent); }
 :root[data-theme="dark"] .rarity-epic { color: #ff55ff; }
 
 .item-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 22px 0 14px; border-bottom: 1px solid var(--line); }
-.tabs { display: flex; flex-wrap: wrap; gap: 4px; }
+/* Reiter bleiben in einer Zeile; wird es zu eng, lassen sie sich seitlich schieben statt umzubrechen */
+.tabs { display: flex; gap: 4px; max-width: 100%; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; margin-bottom: -1px; }
+.tabs::-webkit-scrollbar { display: none; }
 .tab {
+  flex: none; white-space: nowrap;
   border: 0; background: transparent; padding: 10px 14px; cursor: pointer; font-weight: 700; color: var(--muted);
-  border-bottom: 3px solid transparent; margin-bottom: -1px;
+  border-bottom: 3px solid transparent;
 }
 .tab.is-on { color: var(--ink); border-bottom-color: var(--accent); }
 .tab:hover { color: var(--ink); }
@@ -470,6 +475,50 @@ li.is-sel > .sg-row { box-shadow: inset 3px 0 0 var(--accent); }
   .cmd-row { grid-template-columns: minmax(0, 1fr) auto; }
   .cmd-label { grid-column: 1 / -1; }
   .cmd-note { grid-column: 1 / -1; }
+}
+
+/* Muster-Werkstatt (Banner, Schild) und Krug-Werkstatt */
+.pat-box { margin: 16px 0; padding: 14px 16px; background: var(--surface); border: 2px solid var(--line); border-radius: var(--r-md); }
+.pat-box > summary { cursor: pointer; list-style-position: outside; margin-left: 18px; }
+.pat-box > summary .block-title { display: inline-flex; margin: 0; }
+.pat-box[open] > summary { margin-bottom: 12px; }
+.pat-grid { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px 20px; align-items: start; }
+.pat-prev { display: flex; gap: 14px; align-items: flex-end; }
+.pat-prev figure { margin: 0; display: grid; justify-items: center; gap: 6px; }
+.pat-prev figcaption { font-size: .8rem; color: var(--muted); text-align: center; max-width: 96px; }
+.pat-cv { image-rendering: pixelated; display: block; }
+.pat-cv--banner { width: 80px; height: 160px; }
+.pat-cv--shield { width: 72px; height: 132px; }
+.pat-hint { max-width: 240px; }
+.pat-hint p { margin: 0 0 8px; }
+.pat-label { font-weight: 700; color: var(--muted); font-size: .9rem; margin: 0 0 6px; }
+.pat-edit .pat-label:not(:first-child) { margin-top: 14px; }
+.swatches { display: grid; grid-template-columns: repeat(8, 28px); gap: 6px; }
+.swatch { width: 28px; height: 28px; border-radius: 6px; border: 2px solid var(--line); cursor: pointer; padding: 0; }
+.swatch.is-on { outline: 3px solid var(--accent); outline-offset: 2px; }
+.pat-layers { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: lay; }
+.pat-layer { display: grid; grid-template-columns: 16px minmax(0, 1.6fr) minmax(0, 1fr) auto; gap: 6px; align-items: center; }
+.pat-dot { width: 16px; height: 16px; border-radius: 4px; box-shadow: inset 0 0 0 1px rgb(0 0 0 / .35); }
+.pat-layer select, .pot-side select { min-width: 0; width: 100%; height: 34px; border: 2px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); padding: 0 6px; font: inherit; font-size: .9rem; }
+.pat-tools { display: flex; gap: 4px; }
+.pat-tools .btn { min-width: 30px; }
+.pat-actions { display: flex; gap: 8px; margin-top: 10px; }
+.pat-sub { font-size: 1rem; margin: 18px 0 8px; }
+.pat-steps { margin: 0; padding-left: 1.4em; display: grid; gap: 6px; }
+.pot-wrap { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: center; }
+.pot-grid { --p: 2.5px; display: grid; grid-template-columns: repeat(3, auto); gap: 0; width: max-content; padding: calc(var(--p) * 4); background: var(--gui-bg, #c6c6c6); border-radius: 4px; }
+.pot-sides { display: grid; grid-template-columns: repeat(2, minmax(150px, 1fr)); gap: 10px 14px; flex: 1; min-width: 0; }
+.pot-side { display: grid; gap: 4px; }
+.pot-side .pat-label { margin: 0; }
+@media (max-width: 620px) {
+  .pat-grid { grid-template-columns: minmax(0, 1fr); }
+  .pat-prev { justify-content: center; }
+  .pat-layer { grid-template-columns: 16px minmax(0, 1fr) auto; }
+  .pat-layer .pat-col { grid-column: 2; }
+  .pat-tools { grid-column: 3; grid-row: 1 / span 2; flex-direction: column; }
+  .pot-wrap { flex-direction: column; align-items: stretch; }
+  .pot-grid { align-self: center; }
+  .pot-sides { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); width: 100%; flex: none; }
 }
 
 .uses { display: grid; gap: 20px; }
@@ -689,12 +738,20 @@ li.is-sel > .sg-row { box-shadow: inset 3px 0 0 var(--accent); }
   .st-tile img { width: 32px; height: 32px; }
 }
 
-/* Schmale Handys: Schriftzug, Darstellung und Zahnrad passen nur ohne DE/EN in die Kopfzeile (Sprache steht in den Einstellungen) */
+/* Schmale Handys: Schriftzug und drei Knöpfe (Sprache, Darstellung, Zahnrad) müssen in eine Zeile passen, die Reiter auch */
 @media (max-width: 420px) {
-  .top-tools .lang { display: none; }
+  .top-tools { gap: 6px; }
+  .brand { gap: 8px; }
+  .tab { padding: 10px 6px; font-size: .94rem; }
 }
-@media (max-width: 360px) {
-  .brand-name { font-size: 1.2rem; }
+@media (max-width: 380px) {
+  .brand-name { font-size: 1.15rem; }
+}
+@media (max-width: 345px) {
+  .brand-name { font-size: 1rem; }
+  .brand-mark { width: 30px; height: 30px; transform: scale(.88); transform-origin: left center; }
+  .top-tools .icon-btn { width: 36px; height: 36px; }
+  .top-tools .lang-btn { width: auto; padding: 0 6px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
