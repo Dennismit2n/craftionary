@@ -6,6 +6,7 @@ import { t, setLang, getLang, detectLang, numberFmt } from './i18n.js';
 import { Icons, initialsOf } from './icons.js';
 import { glyphUrl } from './glyphs.js';
 import { NETHERITE_SET, enchantable, pickEnchants, giveCommand } from './commands.js';
+import { oreProfiles, featuresFor, veinsFor, fmtPct, fmtCount, fmtY } from './sources.js';
 import { h, fill, Ctx, recipeGui, legend, notes, chip, stationName, stationTitle, fmtSeconds, fmtTicks, arrow } from './ui.js';
 
 const LS = {
@@ -54,6 +55,7 @@ class App {
       const data = await fetch(`data/${vs.default}.json`).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
       this.db = new DB(data);
       this.ench = await fetch(`data/enchantments-${vs.default}.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+      this.src = await fetch(`data/sources-${vs.default}.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
       this.index = buildIndex(data.items, { aliases: buildAliases(data) });
     } catch (e) {
       console.error(e);
@@ -77,7 +79,7 @@ class App {
     const hash = decodeURIComponent(location.hash.replace(/^#/, ''));
     if (!hash) this.view = { kind: 'home' };
     else if (hash.startsWith('s-') && STATION_BY_ID[hash.slice(2)]) this.view = { kind: 'station', id: hash.slice(2), sel: null, cat: 'all' };
-    else if (this.db && this.db.items[hash]) this.view = { kind: 'item', id: hash, tab: 'make' };
+    else if (this.db && this.db.items[hash]) this.view = { kind: 'item', id: hash, tab: null };
     else this.view = { kind: 'home' };
     this.render();
   }
@@ -104,7 +106,7 @@ class App {
     if (qty) this.qty = qty;
     else if (!(this.view.kind === 'item' && this.view.id === id)) this.qty = 1;
     this.closeSuggest();
-    this.go({ kind: 'item', id, tab: 'make' }, id);
+    this.go({ kind: 'item', id, tab: null }, id);
   }
 
   openStation(id, sel = null) {
@@ -258,7 +260,8 @@ class App {
     const it = db.items[id];
     const recipes = db.recipesFor(id);
     const uses = db.usagesOf(id);
-    const tab = this.view.tab || 'make';
+    const finds = this.findCount(id);
+    const tab = this.view.tab || (recipes.length || !finds ? 'make' : 'find');
     const pinfo = db.potionInfo(id);
     const other = lang === 'de' ? it.n[0] : it.n[1];
     const sub = db.sub(id, lang);
@@ -274,8 +277,9 @@ class App {
     const qtyBox = this.qtyControl(() => this.render());
     const tabs = h('div', { class: 'tabs', role: 'tablist' },
       this.tabBtn('make', `${t('tabMake')} (${recipes.length})`, tab),
-      this.tabBtn('use', `${t('tabUse')} (${uses.length})`, tab));
-    const body = tab === 'make' ? this.makeList(id, recipes) : this.useList(id, uses);
+      this.tabBtn('use', `${t('tabUse')} (${uses.length})`, tab),
+      this.src ? this.tabBtn('find', `${t('tabFind')} (${finds})`, tab) : null);
+    const body = tab === 'make' ? this.makeList(id, recipes) : tab === 'find' ? this.findList(id) : this.useList(id, uses);
     return h('div', { class: 'item-view' }, this.backBar(), head, this.commandBox(id), this.textureBanner(), h('div', { class: 'item-bar' }, tabs, tab === 'make' && recipes.length ? qtyBox : null), body);
   }
 
@@ -309,6 +313,143 @@ class App {
         ...cmds.map(([sid, c]) => this.cmdRow(this.db.name(sid, lang), c)));
     }
     return h('section', { class: 'cmd-box' }, h('div', { class: 'cmd-head' }, h('h2', { class: 'block-title' }, t('commands')), controls), ...rows, set, h('p', { class: 'muted small' }, t('cmdHint')));
+  }
+
+  // ----------------------------------------------------------------------- Fundorte
+  findCount(id) {
+    const s = this.src;
+    if (!s) return 0;
+    return (s.items[id] || []).length + (s.trades[id] || []).length + oreProfiles(s, featuresFor(s, id)).length;
+  }
+
+  findList(id) {
+    const s = this.src;
+    const lang = getLang();
+    const L = lang === 'de' ? 1 : 0;
+    const name = (k) => (s.names[k] || [k.split(':').pop(), k.split(':').pop()])[L];
+    const itemName = (i) => (this.db.items[i] ? this.db.name(i, lang) : name(`block:${i}`));
+    const rows = s.items[id] || [];
+    const out = [];
+    for (const p of oreProfiles(s, featuresFor(s, id))) out.push(this.oreSection(p, name));
+    for (const v of veinsFor(s, id)) {
+      out.push(h('p', { class: 'find-vein' }, t('findVein', { filler: itemName(v.filler), ore: itemName(v.ore), raw: itemName(v.raw), p: fmtPct(v.rawChance, lang), lo: fmtY(v.lo), hi: fmtY(v.hi) })));
+    }
+    const per = { block: 'perBlock', mob: 'perKill', shear: 'perShear', creeper: 'perKill', chest: 'perChest', brush: 'perBrush', fish: 'perFish', gift: 'perTime' };
+    const prefix = { block: 'block', mob: 'mob', shear: 'mob', creeper: 'mob', chest: 'chest', brush: 'chest', fish: 'other', gift: 'other' };
+    const flagText = { F: 'flagFortune', L: 'flagLooting', S: 'flagSilk', H: 'flagShears' };
+    const groups = [['secBlock', ['block']], ['secMob', ['mob', 'shear', 'creeper']], ['secChest', ['chest', 'brush']], ['secOther', ['fish', 'gift']]];
+    for (const [title, kinds] of groups) {
+      const list = rows.filter((r) => kinds.includes(r[0])).sort((a, b) => b[2] - a[2] || a[1].localeCompare(b[1]));
+      if (!list.length) continue;
+      out.push(this.findSection(t(title), list.map(([kind, key, p, , min, max, flags]) => {
+        const notes = [...flags].map((f) => t(flagText[f])).concat(kind === 'creeper' ? [t('flagCreeper')] : []);
+        const label = kind === 'block' && this.db.items[key]
+          ? h('button', { class: 'link-btn', type: 'button', onClick: () => this.openItem(key) }, name(`block:${key}`))
+          : h('span', null, name(`${prefix[kind]}:${key}`));
+        return h('li', { class: 'find-row' },
+          h('span', { class: 'find-name' }, label),
+          h('span', { class: 'find-p' }, h('strong', null, fmtPct(p, lang)), ' ', t(per[kind])),
+          h('span', { class: 'find-n' }, fmtCount(min, max)),
+          notes.length ? h('span', { class: 'find-notes muted small' }, notes.join(' · ')) : null,
+          kind === 'chest' || kind === 'brush' ? this.biomeNote(key, name) : null);
+      })));
+    }
+    const trades = s.trades[id] || [];
+    if (trades.length) {
+      out.push(this.findSection(t('secTrade'), trades.slice().sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0])).map(([prof, lvl, wants, count, uses, variant]) =>
+        h('li', { class: 'find-row' },
+          h('span', { class: 'find-name' }, `${name(`prof:${prof}`)} · ${name(`lvl:${lvl}`)}`),
+          h('span', { class: 'find-p' }, wants.map(([w, c]) => `${c}× ${itemName(w)}`).join(' + '), ' → ', h('strong', null, `${count}× ${itemName(id)}`)),
+          uses ? h('span', { class: 'find-n muted small' }, t('tradeUses', { n: uses })) : null,
+          variant ? h('span', { class: 'find-notes muted small' }, t('tradeVariant', { b: name(`biome:${variant}`) })) : null))));
+    }
+    if (!out.length) return h('p', { class: 'empty' }, t('findNone'));
+    out.push(h('p', { class: 'muted small find-foot' }, t('findNote', { v: this.db.meta.version })));
+    return h('div', { class: 'find' }, out);
+  }
+
+  findSection(title, items) {
+    const LIMIT = 12;
+    const head = items.slice(0, LIMIT), rest = items.slice(LIMIT);
+    return h('section', { class: 'find-sec' },
+      h('h3', { class: 'block-title' }, title),
+      h('ul', { class: 'find-list' }, head),
+      rest.length ? h('details', { class: 'find-more' }, h('summary', null, t('showAll', { n: items.length })), h('ul', { class: 'find-list' }, rest)) : null);
+  }
+
+  biomeNote(key, name) {
+    const s = this.src;
+    if (key === 'simple_dungeon') return h('span', { class: 'find-biomes muted small' }, t('dungeonWhere'));
+    const biomes = [...new Set((s.chestStructs[key] || []).flatMap((x) => s.structs[x] || []))];
+    if (!biomes.length) return null;
+    if (biomes.length >= 40) return h('span', { class: 'find-biomes muted small' }, t('almostEverywhere'));
+    return h('details', { class: 'find-biomes' }, h('summary', { class: 'muted small' }, t('inBiomes', { n: biomes.length })),
+      h('p', { class: 'small' }, biomes.map((b) => name(`biome:${b}`)).sort((a, b) => a.localeCompare(b)).join(', ')));
+  }
+
+  oreSection(p, name) {
+    const lang = getLang();
+    const text = [
+      h('p', { class: 'find-best' }, h('strong', null, t('findBest', { y: fmtY(p.best.y) })), h('br'), t('findBand', { a: fmtY(p.best.band[0]), b: fmtY(p.best.band[1]) })),
+    ];
+    if (p.low) text.push(h('p', null, t('findLow', { y: fmtY(p.low.y), a: fmtY(p.low.band[0]), b: fmtY(p.low.band[1]) })), h('p', { class: 'muted small' }, t('findMountain')));
+    if (p.visible < 0.6) text.push(h('p', null, t('findAir', { p: fmtPct(p.visible, lang) })));
+    text.push(h('p', { class: 'muted small' }, p.biomes === 'all' ? t('findBiomesAll')
+      : t('findBiomes', { list: p.biomes.map((b) => name(`biome:${b}`)).sort((a, b) => a.localeCompare(b)).join(', ') })));
+    const title = t('findOres') + (p.dim !== 'overworld' ? ` · ${t('dim_' + p.dim)}` : '');
+    return h('section', { class: 'find-sec' }, h('h3', { class: 'block-title' }, title), h('div', { class: 'ore-wrap' }, this.oreChart(p), h('div', { class: 'ore-text' }, text)));
+  }
+
+  /** Tiefenprofil: Y senkrecht wie im Spiel, Häufigkeit waagerecht; beste Höhe und 80-%-Bereich markiert, Tooltip beim Zeigen */
+  oreChart(p) {
+    const lang = getLang();
+    const NS = 'http://www.w3.org/2000/svg';
+    const el = (tag, attrs = {}, ...kids) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); e.append(...kids); return e; };
+    const max = p.best.v;
+    let y0 = p.hi, y1 = p.lo;
+    p.vals.forEach((v, i) => { if (v >= max * 0.01) { y0 = Math.min(y0, p.lo + i); y1 = Math.max(y1, p.lo + i); } });
+    y0 = Math.max(p.lo, y0 - 8); y1 = Math.min(p.hi, y1 + 8);
+    const W = 280, H = 300, L = 44, R = 12, T = 10, B = 10;
+    const yPix = (y) => T + ((y1 - y) / Math.max(1, y1 - y0)) * (H - T - B);
+    const xPix = (v) => L + (v / max) * (W - L - R);
+    const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'ore-chart', role: 'img', 'aria-label': `${t('findChart')}: ${t('findBest', { y: fmtY(p.best.y) })}` });
+    const step = y1 - y0 > 200 ? 64 : y1 - y0 > 90 ? 32 : 16;
+    for (let y = Math.ceil(y0 / step) * step; y <= y1; y += step) {
+      svg.append(el('line', { x1: L, x2: W - R, y1: yPix(y), y2: yPix(y), class: 'oc-grid' }), el('text', { x: L - 6, y: yPix(y) + 4, class: 'oc-axis', 'text-anchor': 'end' }, fmtY(y)));
+    }
+    svg.append(el('rect', { x: L, y: yPix(p.best.band[1]) - 0.5, width: W - L - R, height: Math.max(1, yPix(p.best.band[0]) - yPix(p.best.band[1]) + 1), class: 'oc-band' }));
+    let d = `M ${L} ${yPix(y1)}`;
+    for (let y = y1; y >= y0; y--) d += ` L ${xPix(p.vals[y - p.lo]).toFixed(1)} ${yPix(y).toFixed(1)}`;
+    d += ` L ${L} ${yPix(y0)} Z`;
+    svg.append(el('path', { d, class: 'oc-area' }));
+    // Linie nur, wo Erz vorkommt (sonst läge sie als dicker Strich auf der Achse)
+    let line = '', open = false;
+    const val = (y) => (y >= p.lo && y <= p.hi ? p.vals[y - p.lo] : 0);
+    for (let y = y1; y >= y0; y--) {
+      if (val(y) <= 0 && val(y + 1) <= 0 && val(y - 1) <= 0) { open = false; continue; }
+      line += `${open ? ' L' : ' M'} ${xPix(val(y)).toFixed(1)} ${yPix(y).toFixed(1)}`;
+      open = true;
+    }
+    svg.append(el('path', { d: line, class: 'oc-line' }));
+    svg.append(el('line', { x1: L, x2: W - R, y1: yPix(p.best.y), y2: yPix(p.best.y), class: 'oc-best' }));
+    svg.append(el('line', { x1: L, x2: L, y1: T, y2: H - B, class: 'oc-base' }));
+    const hover = el('line', { x1: L, x2: W - R, y1: 0, y2: 0, class: 'oc-hover', visibility: 'hidden' });
+    svg.append(hover, el('rect', { x: L, y: T, width: W - L - R, height: H - T - B, class: 'oc-hit' }));
+    const tip = h('div', { class: 'oc-tip', hidden: true });
+    const move = (e) => {
+      const r = svg.getBoundingClientRect();
+      const py = ((e.clientY - r.top) / r.height) * H;
+      const y = Math.round(y1 - ((py - T) / (H - T - B)) * (y1 - y0));
+      if (y < y0 || y > y1) return;
+      hover.setAttribute('y1', yPix(y)); hover.setAttribute('y2', yPix(y)); hover.setAttribute('visibility', 'visible');
+      tip.textContent = t('findTip', { y: fmtY(y), p: fmtPct(p.vals[y - p.lo] / max, lang) });
+      tip.hidden = false;
+      tip.style.top = `${(yPix(y) / H) * r.height}px`;
+    };
+    svg.addEventListener('pointermove', move);
+    svg.addEventListener('pointerdown', move);
+    svg.addEventListener('pointerleave', () => { hover.setAttribute('visibility', 'hidden'); tip.hidden = true; });
+    return h('div', { class: 'oc-box' }, svg, tip);
   }
 
   cmdRow(label, cmd, note = null) {

@@ -364,7 +364,7 @@ li.is-sel > .sg-row { box-shadow: inset 3px 0 0 var(--accent); }
 :root[data-theme="dark"] .rarity-epic { color: #ff55ff; }
 
 .item-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 22px 0 14px; border-bottom: 1px solid var(--line); }
-.tabs { display: flex; gap: 4px; }
+.tabs { display: flex; flex-wrap: wrap; gap: 4px; }
 .tab {
   border: 0; background: transparent; padding: 10px 14px; cursor: pointer; font-weight: 700; color: var(--muted);
   border-bottom: 3px solid transparent; margin-bottom: -1px;
@@ -416,6 +416,42 @@ li.is-sel > .sg-row { box-shadow: inset 3px 0 0 var(--accent); }
 .seg button { border: 0; background: transparent; padding: 6px 12px; cursor: pointer; font-weight: 700; color: var(--muted); }
 .seg button.is-on { background: var(--ink); color: var(--surface); }
 .seg--sm button { padding: 4px 9px; font-size: .85rem; }
+
+/* Fundorte */
+.find { display: grid; gap: 18px; }
+.find-sec .block-title { margin-bottom: 8px; }
+.find-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.find-row { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto; gap: 2px 12px; align-items: baseline; padding: 7px 10px; background: var(--surface); border-radius: var(--r-sm); }
+.find-p { font-variant-numeric: tabular-nums; }
+.find-n { font-variant-numeric: tabular-nums; color: var(--muted); text-align: right; }
+.find-notes, .find-biomes { grid-column: 1 / -1; }
+.find-biomes summary { cursor: pointer; }
+.find-biomes p { margin: 4px 0 0; }
+.find-more summary { cursor: pointer; font-weight: 700; padding: 8px 0 4px; }
+.find-vein { margin: 0; padding: 10px 12px; background: var(--patina-soft); border-radius: var(--r-sm); }
+.find-foot { margin: 0; }
+.link-btn { border: 0; background: none; padding: 0; color: var(--accent); font: inherit; font-weight: 700; cursor: pointer; text-align: left; }
+.link-btn:hover { text-decoration: underline; }
+.ore-wrap { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.ore-text p { margin: 0 0 8px; }
+.oc-box { position: relative; background: var(--surface); border-radius: var(--r-md); padding: 6px; }
+.ore-chart { display: block; width: 100%; height: auto; touch-action: pan-y; }
+.oc-grid { stroke: var(--line); stroke-width: 1; }
+.oc-base { stroke: var(--muted); stroke-width: 1; }
+.oc-axis { fill: var(--muted); font-size: 11px; font-family: var(--font-body); font-variant-numeric: tabular-nums; }
+.oc-band { fill: var(--accent-soft); }
+.oc-area { fill: var(--accent); fill-opacity: .28; }
+.oc-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; }
+.oc-best { stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.oc-hover { stroke: var(--ink); stroke-width: 1; }
+.oc-hit { fill: transparent; cursor: crosshair; }
+.oc-tip { position: absolute; right: 12px; transform: translateY(-120%); background: var(--ink); color: var(--surface); padding: 3px 8px; border-radius: 6px; font-size: .8rem; font-weight: 700; pointer-events: none; white-space: nowrap; }
+@media (max-width: 620px) {
+  .tab { padding: 10px 8px; }
+  .ore-wrap { grid-template-columns: minmax(0, 1fr); }
+  .find-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .find-name { grid-column: 1 / -1; }
+}
 
 /* Befehle (/give) */
 .cmd-box { margin: 16px 0; padding: 14px 16px; background: var(--surface); border: 2px solid var(--line); border-radius: var(--r-md); }
