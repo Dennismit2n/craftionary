@@ -169,8 +169,7 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
 .icon-btn:hover { color: var(--accent); }
 /* Sprach-Knopf: beide Kürzel sichtbar, die aktive Sprache hervorgehoben; ein Tipp wechselt */
 .lang-btn { width: auto; display: inline-flex; gap: 5px; padding: 0 8px; font-weight: 700; font-size: .85rem; letter-spacing: .02em; }
-.lang-btn span { color: var(--muted); }
-.lang-btn span.is-on { color: var(--ink); text-decoration: underline 2px var(--accent); text-underline-offset: 4px; }
+.lang-btn span { color: var(--ink); text-decoration: underline 2px var(--accent); text-underline-offset: 4px; }
 .lang-btn:hover span { color: var(--accent); }
 /* Knopf „Installieren“: erscheint nur, wenn der Browser die App anbietet (nie in der installierten App).
    Breit: zweite Zeile unter den Knöpfen rechts. Schmal: eigene volle Zeile unter der Suche.
@@ -341,7 +340,8 @@ li.is-sel > .sg-row { box-shadow: inset 3px 0 0 var(--accent); }
 .st-tile:hover { border-color: var(--accent); }
 .st-tile img { grid-row: span 2; width: 40px; height: 40px; image-rendering: pixelated; }
 .st-name { font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; hyphens: auto; }
-.st-count { font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+/* lange Zählwörter (Japanisch, Russisch) dürfen umbrechen, aber nur zwischen Wörtern */
+.st-count { font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; word-break: keep-all; }
 .st-key { font-family: var(--font-display); font-size: .72rem; min-width: 18px; height: 18px; display: inline-grid; place-items: center; border: 1px solid var(--line); border-radius: 4px; color: var(--muted); }
 .tile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
 .tile {

@@ -1,5 +1,7 @@
 // Craftionary – Fundorte: Erz-Verteilung über die Höhe und Hilfen zur Anzeige der Quellen aus data/sources-<version>.json
 
+import { locale } from './i18n.js';
+
 export const DIM = { overworld: [-64, 319], nether: [0, 255], end: [0, 255] };
 export const SEA_LEVEL = 63;
 
@@ -70,11 +72,12 @@ export function veinsFor(src, id) {
   return Object.entries(src.veins).filter(([, v]) => blocks.includes(v.ore) || blocks.includes(v.raw)).map(([kind, v]) => ({ kind, ...v }));
 }
 
-/** Prozent mit sinnvoller Genauigkeit: 100 %, 66,7 %, 5,9 %, 0,83 % */
+/** Prozent mit sinnvoller Genauigkeit und der Schreibweise der Sprache: 100 %, 66,7 %, 5,9 %, 0,83 % · 66.7% · %5,9 */
 export function fmtPct(p, lang = 'de') {
   const v = p * 100;
   const digits = v >= 99.95 ? 0 : v >= 10 ? 1 : v >= 1 ? 1 : 2;
-  return new Intl.NumberFormat(lang === 'de' ? 'de-DE' : 'en-GB', { maximumFractionDigits: digits, minimumFractionDigits: v >= 99.95 ? 0 : digits }).format(v) + (lang === 'de' ? ' %' : '%');
+  return new Intl.NumberFormat(lang === 'en' ? 'en-GB' : locale(lang), { style: 'percent', maximumFractionDigits: digits, minimumFractionDigits: v >= 99.95 ? 0 : digits })
+    .format(p).replace(/\u00a0%/, ' %');
 }
 
 /** Höhe mit echtem Minuszeichen: Y −59 statt Y -59 */

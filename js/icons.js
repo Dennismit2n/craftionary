@@ -5,7 +5,7 @@ const DB_VER = 1;
 
 function idb() {
   return new Promise((resolve, reject) => {
-    if (!('indexedDB' in globalThis)) { reject(new Error('IndexedDB nicht verfügbar')); return; }
+    if (!('indexedDB' in globalThis)) { reject(Object.assign(new Error('IndexedDB nicht verfügbar'), { code: 'NO_IDB' })); return; }
     const req = indexedDB.open(DB_NAME, DB_VER);
     req.onupgradeneeded = () => {
       const db = req.result;

@@ -2,7 +2,8 @@
 
 import { DB, STATIONS, STATION_BY_ID } from './db.js';
 import { buildIndex, buildAliases, search } from './search.js';
-import { t, setLang, getLang, detectLang, numberFmt } from './i18n.js';
+import { t, setLang, getLang, detectLang, numberFmt, LANGS, locale, addTexts, isBaseLang } from './i18n.js';
+import { loc, setPack, getPack } from './loc.js';
 import { Icons, initialsOf } from './icons.js';
 import { glyphUrl } from './glyphs.js';
 import { NETHERITE_SET, enchantable, pickEnchants, giveCommand } from './commands.js';
@@ -18,8 +19,6 @@ const LS = {
 const POPULAR = ['crafting_table', 'furnace', 'chest', 'torch', 'white_bed', 'stick', 'oak_planks', 'ladder', 'oak_boat', 'bucket',
   'shield', 'bow', 'iron_pickaxe', 'diamond_sword', 'enchanting_table', 'anvil', 'ender_chest', 'beacon', 'piston', 'hopper',
   'rail', 'compass', 'bread', 'potion.night_vision', 'firework_rocket', 'netherite_ingot'];
-const EXAMPLES = { de: ['16 Fackeln', 'Holzspitzhake', 'Trank der Nachtsicht', 'Netheritschwert', 'Leuchtfeuer', 'eichenbretter'],
-  en: ['16 torches', 'wodden pickaxe', 'potion of night vision', 'netherite sword', 'beacon', 'oak planks'] };
 // Reiter-Reihenfolge wie im Rezeptbuch des Spiels (Werkbank: Bauen, Redstone, Ausrüstung, Sonstiges; Ofen: Essen, Blöcke, Sonstiges)
 const CAT_ORDER = ['building', 'redstone', 'equipment', 'food', 'blocks', 'misc', 'special', 'other', 'upgrade', 'trim', 'potions', 'splash', 'lingering'];
 const catRank = (c) => { const i = CAT_ORDER.indexOf(c); return i < 0 ? 99 : i; };
@@ -88,7 +87,11 @@ class App {
       this.ench = await fetch(`data/enchantments-${vs.default}.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
       this.src = await fetch(`data/sources-${vs.default}.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
       this.pat = await fetch(`data/patterns-${vs.default}.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-      this.index = buildIndex(data.items, { aliases: buildAliases(data) });
+      this.version = vs.default;
+      this.aliases = buildAliases(data);
+      if (!(await this.loadPack(getLang()))) setLang('en');
+      document.documentElement.lang = getLang();
+      this.buildSearchIndex();
     } catch (e) {
       console.error(e);
       this.$('#main').replaceChildren(h('p', { class: 'loading' }, t('loadFailed')));
@@ -105,6 +108,43 @@ class App {
   }
 
   addCycler(fn) { this.cyclers.push(fn); }
+
+  /** Sprachpaket (Namen und Oberfläche) der übrigen 12 Sprachen laden; Deutsch und Englisch stecken schon in den Daten */
+  async loadPack(l) {
+    if (isBaseLang(l)) { setPack(null); return true; }
+    if (getPack()?.lang === l) return true;
+    try {
+      const p = await fetch(`data/lang-${this.version}/${l}.json`).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
+      setPack(p);
+      addTexts(l, p.t);
+      return true;
+    } catch (e) {
+      console.warn('Sprachpaket fehlt:', l, e);
+      return false;
+    }
+  }
+
+  buildSearchIndex() {
+    this.index = buildIndex(this.db.items, { aliases: this.aliases, loc: getPack() });
+    this.bookCache = null;
+  }
+
+  /** Name einer Fundort-Quelle; Blöcke, die auch Items sind, heißen im Sprachpaket wie das Item */
+  srcName(k, lang) {
+    const id = k.slice(k.indexOf(':') + 1);
+    if (k.startsWith('block:') && !isBaseLang(lang) && this.db.items[id]) return this.db.name(id, lang);
+    return loc(this.src.names[k] || [id, id], 'src', k, lang);
+  }
+
+  enchName(id, lang) {
+    const e = this.ench && this.ench.enchantments[id];
+    return e ? loc(e.n, 'ench', id, lang) : id;
+  }
+
+  /** Name in der zweiten Sprache unter dem Itemnamen: auf Englisch der deutsche, sonst der englische */
+  otherName(it) {
+    return getLang() === 'en' ? it.n[1] : it.n[0];
+  }
 
   // ======================================================================= Navigation
   route() {
@@ -150,13 +190,15 @@ class App {
   renderStatic() {
     const lang = getLang();
     document.documentElement.lang = lang;
+    this.$('.skip').textContent = t('skip');
     const q = this.$('#q');
     q.placeholder = t('searchPlaceholder');
     q.setAttribute('aria-label', t('searchLabel'));
     this.$('#tagline').textContent = t('tagline', { v: this.db ? this.db.meta.version : '' });
-    for (const s of document.querySelectorAll('#btn-lang [data-l]')) s.classList.toggle('is-on', s.dataset.l === lang);
-    this.$('#btn-lang').setAttribute('aria-label', t('langSwitch'));
-    this.$('#btn-lang').title = t('langSwitch');
+    const langName = (LANGS.find(([c]) => c === lang) || [lang, lang])[1];
+    this.$('#lang-code').textContent = lang.toUpperCase();
+    this.$('#btn-lang').setAttribute('aria-label', t('langOpen', { name: langName }));
+    this.$('#btn-lang').title = t('langOpen', { name: langName });
     this.$('#btn-install-label').textContent = t('installShort');
     this.$('#btn-settings').setAttribute('aria-label', t('settings'));
     this.$('#btn-settings').title = t('settings');
@@ -257,7 +299,7 @@ class App {
 
   viewHome() {
     const lang = getLang();
-    const ex = EXAMPLES[lang].map((q) => h('button', { class: 'chip chip--btn', type: 'button', onClick: () => this.runQuery(q) }, q));
+    const ex = t('examples').map((q) => h('button', { class: 'chip chip--btn', type: 'button', onClick: () => this.runQuery(q) }, q));
     const pop = POPULAR.filter((id) => this.db.items[id]).map((id) => this.itemTile(id));
     const stations = STATIONS.map((st, i) => {
       const tex = this.icons.url(TEX_OF[st.id]);
@@ -269,17 +311,15 @@ class App {
     });
     return h('div', { class: 'home' },
       h('section', { class: 'hero' },
-        h('h1', { class: 'hero-title' }, lang === 'de' ? 'Sag, was du brauchst.' : 'Say what you need.'),
-        h('p', { class: 'hero-sub' }, lang === 'de'
-          ? 'Tippfehler, Mehrzahl, Englisch oder Deutsch: Craftionary findet das Rezept und zeigt es dir so, wie du es im Spiel legst.'
-          : 'Typos, plurals, English or German: Craftionary finds the recipe and shows it the way you place it in the game.'),
+        h('h1', { class: 'hero-title' }, t('heroTitle')),
+        h('p', { class: 'hero-sub' }, t('heroSub')),
         h('div', { class: 'chips' }, ex)),
       this.textureBanner(),
       h('section', { class: 'block' },
         h('h2', { class: 'block-title' }, t('stations')),
         h('div', { class: 'st-grid' }, stations)),
       h('section', { class: 'block' },
-        h('h2', { class: 'block-title' }, lang === 'de' ? 'Oft gebraucht' : 'Often needed'),
+        h('h2', { class: 'block-title' }, t('oftenNeeded')),
         h('div', { class: 'tile-grid' }, pop)),
       this.aboutBlock());
   }
@@ -311,7 +351,7 @@ class App {
     const finds = this.findCount(id);
     const tab = this.view.tab || (recipes.length || !finds ? 'make' : 'find');
     const pinfo = db.potionInfo(id);
-    const other = lang === 'de' ? it.n[0] : it.n[1];
+    const other = this.otherName(it);
     const sub = db.sub(id, lang);
     const head = h('header', { class: 'item-head' },
       h('div', { class: 'slot slot--big item-ico' }, this.icons.el(id, { initials: initialsOf(db.name(id, lang)), potionColor: pinfo ? pinfo.color : null })),
@@ -349,7 +389,7 @@ class App {
     const both = can.includes('fortune') && can.includes('silk_touch');
     const seg = (key, cur, opts) => h('div', { class: 'seg seg--sm', role: 'group' },
       opts.map(([v, label]) => h('button', { type: 'button', class: cur === v ? 'is-on' : '', 'aria-pressed': cur === v ? 'true' : 'false', onClick: () => { LS.set(key, v); this.render(); } }, label)));
-    const enchName = (k) => ench.enchantments[k].n[lang === 'de' ? 1 : 0];
+    const enchName = (k) => this.enchName(k, lang);
     const rows = [this.cmdRow(t('cmdPlain'), giveCommand(id, it, { count: this.qty }))];
     if (can.length) {
       const list = pickEnchants(ench, id, { mode, mining });
@@ -510,8 +550,7 @@ class App {
   findList(id) {
     const s = this.src;
     const lang = getLang();
-    const L = lang === 'de' ? 1 : 0;
-    const name = (k) => (s.names[k] || [k.split(':').pop(), k.split(':').pop()])[L];
+    const name = (k) => this.srcName(k, lang);
     const itemName = (i) => (this.db.items[i] ? this.db.name(i, lang) : name(`block:${i}`));
     const rows = s.items[id] || [];
     const out = [];
@@ -522,12 +561,13 @@ class App {
     const per = { block: 'perBlock', mob: 'perKill', shear: 'perShear', creeper: 'perKill', chest: 'perChest', brush: 'perBrush', fish: 'perFish', gift: 'perTime' };
     const prefix = { block: 'block', mob: 'mob', shear: 'mob', creeper: 'mob', chest: 'chest', brush: 'chest', fish: 'other', gift: 'other' };
     const flagText = { F: 'flagFortune', L: 'flagLooting', S: 'flagSilk', H: 'flagShears' };
+    const flagEnch = { F: 'fortune', L: 'looting', S: 'silk_touch' };
     const groups = [['secBlock', ['block']], ['secMob', ['mob', 'shear', 'creeper']], ['secChest', ['chest', 'brush']], ['secOther', ['fish', 'gift']]];
     for (const [title, kinds] of groups) {
       const list = rows.filter((r) => kinds.includes(r[0])).sort((a, b) => b[2] - a[2] || a[1].localeCompare(b[1]));
       if (!list.length) continue;
       out.push(this.findSection(t(title), list.map(([kind, key, p, , min, max, flags]) => {
-        const notes = [...flags].map((f) => t(flagText[f])).concat(kind === 'creeper' ? [t('flagCreeper')] : []);
+        const notes = [...flags].map((f) => t(flagText[f], { e: this.enchName(flagEnch[f], lang) })).concat(kind === 'creeper' ? [t('flagCreeper')] : []);
         const label = kind === 'block' && this.db.items[key]
           ? h('button', { class: 'link-btn', type: 'button', onClick: () => this.openItem(key) }, name(`block:${key}`))
           : h('span', null, name(`${prefix[kind]}:${key}`));
@@ -569,7 +609,7 @@ class App {
     if (!biomes.length) return null;
     if (biomes.length >= 40) return h('span', { class: 'find-biomes muted small' }, t('almostEverywhere'));
     return h('details', { class: 'find-biomes' }, h('summary', { class: 'muted small' }, t('inBiomes', { n: biomes.length })),
-      h('p', { class: 'small' }, biomes.map((b) => name(`biome:${b}`)).sort((a, b) => a.localeCompare(b)).join(', ')));
+      h('p', { class: 'small' }, biomes.map((b) => name(`biome:${b}`)).sort((a, b) => a.localeCompare(b, locale())).join(', ')));
   }
 
   oreSection(p, name) {
@@ -580,7 +620,7 @@ class App {
     if (p.low) text.push(h('p', null, t('findLow', { y: fmtY(p.low.y), a: fmtY(p.low.band[0]), b: fmtY(p.low.band[1]) })), h('p', { class: 'muted small' }, t('findMountain')));
     if (p.visible < 0.6) text.push(h('p', null, t('findAir', { p: fmtPct(p.visible, lang) })));
     text.push(h('p', { class: 'muted small' }, p.biomes === 'all' ? t('findBiomesAll')
-      : t('findBiomes', { list: p.biomes.map((b) => name(`biome:${b}`)).sort((a, b) => a.localeCompare(b)).join(', ') })));
+      : t('findBiomes', { list: p.biomes.map((b) => name(`biome:${b}`)).sort((a, b) => a.localeCompare(b, locale())).join(', ') })));
     const title = t('findOres') + (p.dim !== 'overworld' ? ` · ${t('dim_' + p.dim)}` : '');
     return h('section', { class: 'find-sec' }, h('h3', { class: 'block-title' }, title), h('div', { class: 'ore-wrap' }, this.oreChart(p), h('div', { class: 'ore-text' }, text)));
   }
@@ -666,7 +706,6 @@ class App {
     const db = this.db;
     const it = db.items[id];
     const lang = getLang();
-    const li = lang === 'de' ? 1 : 0;
     const out = [];
     if (it.r) out.push(chip(t('rarity.' + it.r), 'rarity-' + it.r));
     out.push(chip(`${t('stack')}: ${it.s || 64}`));
@@ -675,9 +714,10 @@ class App {
     if (it.bfuel) out.push(chip(t('brewFuel', { n: it.bfuel }), 'fuel'));
     if (pinfo) {
       for (const e of pinfo.effects) {
-        const lvl = e.amp > 0 ? ' ' + (db.ui['potion.potency.' + e.amp] || ['', ''])[li] : '';
+        const pk = 'potion.potency.' + e.amp;
+        const lvl = e.amp > 0 && db.ui[pk] ? ' ' + loc(db.ui[pk], 'ui', pk, lang) : '';
         const dur = e.instant ? t('instant') : fmtTicks(e.ticks);
-        out.push(chip(`${e.n[li]}${lvl} (${dur})`, e.cat === 'h' ? 'bad' : 'good'));
+        out.push(chip(`${loc(e.n, 'effects', e.id, lang)}${lvl} (${dur})`, e.cat === 'h' ? 'bad' : 'good'));
       }
       if (pinfo.long) out.push(chip(t('longVariant'), 'info'));
       if (pinfo.strong) out.push(chip(t('strongVariant'), 'info'));
@@ -777,7 +817,7 @@ class App {
           h('button', { class: 'linkish', type: 'button', onClick: () => this.openItem(items[0]) }, db.ingLabel(e.ref, lang)),
           h('strong', { class: 'mat-n' }, '×', numberFmt(e.count)));
       }));
-      const leftEl = left.length ? h('p', { class: 'muted small' }, (lang === 'de' ? 'Übrig: ' : 'Left over: ') + left.map((l) => `${l.count}× ${db.name(l.id, lang)}`).join(', ')) : null;
+      const leftEl = left.length ? h('p', { class: 'muted small' }, t('leftOverList', { list: left.map((l) => `${l.count}× ${db.name(l.id, lang)}`).join(', ') })) : null;
       const wood = rows.some((e) => /log|planks|stem/.test(String(e.ref))) ? h('p', { class: 'muted small' }, t('materialsNote')) : null;
       fill(wrap,
         h('div', { class: 'mat-head' },
@@ -813,7 +853,7 @@ class App {
         h('h2', { class: 'block-title' }, h('img', { src: tex || glyphUrl(GLYPH_OF[st.id]), alt: '', class: tex ? 'hb-tex' : 'hb-glyph' }), stationName(db, st.id), h('span', { class: 'muted' }, ` · ${list.length}`)),
         h('ul', { class: 'use-list' }, list.map(({ r, role }) => {
           const outId = r.out ? r.out.id : db.ingItems(r.b)[0];
-          const label = r.t === 'trim' ? `${db.name(db.ingItems(r.tpl)[0], lang)} – ${db.sub(db.ingItems(r.tpl)[0], lang)}` : db.fullName(outId, lang);
+          const label = r.t === 'trim' ? `${db.name(db.ingItems(r.tpl)[0], lang)} · ${db.sub(db.ingItems(r.tpl)[0], lang)}` : db.fullName(outId, lang);
           const pc = db.items[outId] && db.items[outId].potion ? db.potionInfo(outId)?.color : null;
           return h('li', null,
             h('button', { class: 'use-row', type: 'button', onClick: () => (r.t === 'trim' ? this.openStation('smithing', r.id) : this.openItem(outId)), dataset: { tip: outId } },
@@ -880,7 +920,7 @@ class App {
     this.bookCache ??= new Map();
     const key = `${stId}|${lang}`;
     if (this.bookCache.has(key)) return this.bookCache.get(key);
-    const coll = new Intl.Collator(lang === 'de' ? 'de' : 'en', { numeric: true, sensitivity: 'base' });
+    const coll = new Intl.Collator(locale(lang), { numeric: true, sensitivity: 'base' });
     const rank = { potions: 0, splash: 1, lingering: 2, upgrade: 0, trim: 1 };
     const grouped = stId === 'brewing' || stId === 'smithing';
     const rows = this.db.byStation.get(stId).filter((r) => r.t !== 'repair')
@@ -1000,6 +1040,7 @@ class App {
     dlg.querySelector('#pick-title').textContent = t('pickItem');
     dlg.querySelector('#pick-close').textContent = t('close');
     input.placeholder = t('pickPlaceholder');
+    input.setAttribute('aria-label', t('pickItem'));
     input.value = '';
     const draw = () => {
       const q = input.value.trim();
@@ -1023,7 +1064,7 @@ class App {
     q.addEventListener('keydown', (e) => this.suggestKeys(e));
     this.$('#search-form').addEventListener('submit', (e) => { e.preventDefault(); this.runQuery(q.value); });
     document.addEventListener('click', (e) => { if (!e.target.closest('#search-form')) this.closeSuggest(); });
-    this.$('#btn-lang').addEventListener('click', () => this.setLanguage(getLang() === 'de' ? 'en' : 'de'));
+    this.$('#btn-lang').addEventListener('click', () => this.openSettings('language'));
     this.$('#btn-settings').addEventListener('click', () => this.openSettings());
     this.$('#btn-theme').addEventListener('click', () => this.toggleTheme());
     // „System“ folgt dem Gerät live, auch bei „Kontrast erhöhen“; eine Wahl in einem anderen
@@ -1091,9 +1132,15 @@ class App {
     const sub = db.sub(id, lang);
     if (sub) lines.push(h('p', { class: 'tip-sub' }, sub));
     const p = db.potionInfo(id);
-    if (p) for (const fx of p.effects) lines.push(h('p', { class: fx.cat === 'h' ? 'tip-bad' : 'tip-good' }, `${fx.n[lang === 'de' ? 1 : 0]}${fx.amp ? ' ' + (db.ui['potion.potency.' + fx.amp] || ['', ''])[lang === 'de' ? 1 : 0] : ''}${fx.instant ? '' : ` (${fmtTicks(fx.ticks)})`}`));
+    if (p) {
+      for (const fx of p.effects) {
+        const pk = 'potion.potency.' + fx.amp;
+        const lvl = fx.amp && db.ui[pk] ? ' ' + loc(db.ui[pk], 'ui', pk, lang) : '';
+        lines.push(h('p', { class: fx.cat === 'h' ? 'tip-bad' : 'tip-good' }, `${loc(fx.n, 'effects', fx.id, lang)}${lvl}${fx.instant ? '' : ` (${fmtTicks(fx.ticks)})`}`));
+      }
+    }
     if (el.dataset.multi) lines.push(h('p', { class: 'tip-multi' }, el.dataset.multi));
-    lines.push(h('p', { class: 'tip-other' }, lang === 'de' ? it.n[0] : it.n[1]));
+    lines.push(h('p', { class: 'tip-other' }, this.otherName(it)));
     lines.push(h('p', { class: 'tip-id' }, 'minecraft:' + (it.base || id)));
     tip.replaceChildren(...lines);
     tip.hidden = false;
@@ -1146,8 +1193,8 @@ class App {
             h('button', { type: 'button', class: 'sg-row', tabIndex: -1, onClick: () => { this.openItem(r.id, res.qty || null); q.blur(); } },
               h('span', { class: 'slot slot--item slot--sm' }, this.icons.el(r.id, { initials: initialsOf(db.name(r.id, lang)), potionColor: pc })),
               h('span', { class: 'sg-names' },
-                h('span', { class: `sg-name rarity-${it.r || 'common'}` }, db.name(r.id, lang), tag ? h('span', { class: 'sg-sub' }, ' – ' + tag) : null),
-                h('span', { class: 'sg-other' }, lang === 'de' ? it.n[0] : it.n[1])),
+                h('span', { class: `sg-name rarity-${it.r || 'common'}` }, db.name(r.id, lang), tag ? h('span', { class: 'sg-sub' }, ' · ' + tag) : null),
+                h('span', { class: 'sg-other' }, this.otherName(it))),
               h('span', { class: 'sg-st' }, sts.slice(0, 4).map((s) => h('img', { src: this.icons.url(TEX_OF[s]) || glyphUrl(GLYPH_OF[s]), alt: stationName(db, s), title: stationName(db, s) }))),
               res.qty && i === 0 ? h('span', { class: 'chip chip--mini' }, '×' + res.qty) : null));
         })));
@@ -1184,13 +1231,20 @@ class App {
     this.$('#q')?.setAttribute('aria-expanded', 'false');
   }
 
-  setLanguage(l) {
+  async setLanguage(l) {
+    if (!(await this.loadPack(l))) { this.toast(t('loadFailed')); return; }
     setLang(l);
-    LS.set('lang', l);
     try { localStorage.setItem('craftionary.lang', l); } catch { /* egal */ }
+    this.buildSearchIndex();
     this.renderStatic();
     this.render();
     if (!this.$('#suggest').hidden) this.suggest();
+    if (this.$('#settings').open) {
+      this.$('#settings-title').textContent = t('settings');
+      this.$('#settings-close').textContent = t('close');
+      this.renderSettings();
+      this.$('#lang-select')?.focus();
+    }
   }
 
   // ======================================================================= Einstellungen & Texturen
@@ -1201,6 +1255,7 @@ class App {
     this.renderSettings();
     dlg.showModal();
     if (focus === 'textures') dlg.querySelector('#tex-section')?.scrollIntoView({ block: 'start' });
+    if (focus === 'language') dlg.querySelector('#lang-select')?.focus();
   }
 
   renderSettings() {
@@ -1226,10 +1281,14 @@ class App {
       preview ? h('p', { class: 'muted small' }, t('texturesPreview')) : h('p', { class: 'muted small' }, t('texturesMobileData', { mb })),
       h('p', { class: 'muted small' }, t('texturesFileHint', { v: db.meta.version })),
       progress);
+    // 14 Sprachen, jeweils in der eigenen Schrift und mit lang-Attribut, damit Vorleser sie richtig aussprechen
+    const langSelect = h('select', { id: 'lang-select', class: 'select' },
+      LANGS.map(([c, n]) => h('option', { value: c, lang: c, selected: c === lang ? 'selected' : null }, n)));
+    langSelect.value = lang;
+    langSelect.addEventListener('change', () => this.setLanguage(langSelect.value));
     const langSection = h('section', { class: 'set-block' },
-      h('h3', null, t('language')),
-      h('div', { class: 'seg', role: 'group' },
-        ['de', 'en'].map((l) => h('button', { type: 'button', class: lang === l ? 'is-on' : '', 'aria-pressed': lang === l ? 'true' : 'false', onClick: () => { this.setLanguage(l); this.renderSettings(); this.$('#settings-title').textContent = t('settings'); this.$('#settings-close').textContent = t('close'); } }, l === 'de' ? 'Deutsch' : 'English'))));
+      h('h3', null, h('label', { for: 'lang-select' }, t('language'))),
+      langSelect);
     // Acht Darstellungen passen nicht mehr in Segmentknöpfe: ein Auswahlfeld wie in den anderen Werkzeugen
     const theme = storedTheme();
     const themeSelect = h('select', { id: 'theme-select', class: 'select' },
@@ -1243,7 +1302,7 @@ class App {
     const about = h('section', { class: 'set-block' },
       h('h3', null, t('about')),
       h('p', null, t('aboutText', { r: numberFmt(db.recipes.length), v: db.meta.version })),
-      h('p', { class: 'muted small' }, t('dataLine', { v: db.meta.version, dp: db.meta.dataPack, n: numberFmt(Object.keys(db.items).length), d: new Date(db.meta.built + 'T12:00:00').toLocaleDateString(lang === 'de' ? 'de-DE' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) })),
+      h('p', { class: 'muted small' }, t('dataLine', { v: db.meta.version, dp: db.meta.dataPack, n: numberFmt(Object.keys(db.items).length), d: new Date(db.meta.built + 'T12:00:00').toLocaleDateString(lang === 'en' ? 'en-GB' : locale(lang), { day: 'numeric', month: 'long', year: 'numeric' }) })),
       h('p', { class: 'muted small' }, t('keys')),
       h('p', { class: 'disclaimer' }, t('disclaimer')));
     fill(body, langSection, themeSection, texSection, install, about);
@@ -1276,7 +1335,8 @@ class App {
     } catch (e) {
       console.error(e);
       const msg = e && e.code === 'WRONG_FILE' ? t('texturesWrongFile', { v: this.db.meta.version })
-        : e && e.code === 'BLOCKED' ? t('texturesBlocked') : t('texturesFailed', { e: e.message || String(e) });
+        : e && e.code === 'BLOCKED' ? t('texturesBlocked') : e && e.code === 'CHECKSUM' ? t('texturesChecksum')
+          : e && e.code === 'NO_IDB' ? t('texturesNoStorage') : t('texturesFailed', { e: e.message || String(e) });
       set(0, msg);
       txt.classList.add('err');
       for (const b of this.$('#tex-section')?.querySelectorAll('button, input') || []) b.disabled = false;

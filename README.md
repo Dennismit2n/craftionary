@@ -9,7 +9,7 @@ Recipe compendium for **Minecraft Java 26.3** as an installable web app (PWA) fo
 
 | Bereich | Details |
 |---|---|
-| Suche | Deutsch und Englisch, verzeiht Tippfehler, Mehrzahl, Umlaute ohne Punkte und Zusammenschreibung („werkbnak“, „Stöcke“, „wodden pickaxe“, „Heiltrank“) |
+| Suche | In der eingestellten Sprache, dazu immer Deutsch und Englisch; verzeiht Tippfehler, Mehrzahl, Umlaute ohne Punkte und Zusammenschreibung („werkbnak“, „Stöcke“, „wodden pickaxe“, „Heiltrank“) |
 | Mengen | „16 Fackeln“ rechnet direkt: 4× herstellen, Stückzahl pro Feld, Reste, Brennstoff, Dauer, Erfahrung |
 | Stationen | Werkbank (3×3), Inventar (2×2), Ofen, Schmelzofen, Räucherofen, Lagerfeuer, Steinsäge, Schmiedetisch, Braustand |
 | Darstellung | Jedes Rezept im Fenster wie im Spiel, mit der Platzierung des Rezeptbuchs (schmale Rezepte mittig) |
@@ -18,10 +18,10 @@ Recipe compendium for **Minecraft Java 26.3** as an installable web app (PWA) fo
 | Befehle | Fertige `/give`-Befehle je Item, verzaubert auf Spiel-Maximum oder übertrieben, dazu das komplette Netherite-Set |
 | Fundorte | Erz-Höhen als Kurve mit bester Höhe, Block- und Kreatur-Drops, Truhen in Strukturen mit Biomen, Angeln, Handel – mit genauen Chancen |
 | Muster | Banner und Schild am Webstuhl gestalten (bis zu 6 Muster, Vorschau, Arbeitsschritte, Befehl), Verzierten Krug aus Scherben zusammenstellen |
-| Bedienung | Hell/Dunkel und Deutsch/Englisch mit einem Tipp in der Kopfzeile |
+| Bedienung | Hell/Dunkel mit einem Tipp in der Kopfzeile, 14 Sprachen (Deutsch, Englisch, Spanisch, Französisch, Italienisch, Niederländisch, Polnisch, Portugiesisch, Türkisch, Russisch, Hindi, Chinesisch, Japanisch, Koreanisch) in den Einstellungen |
 | Offline | Nach dem ersten Besuch funktioniert alles ohne Netz |
 
-Die Daten (2.087 Rezepte, 1.842 Items inklusive aller Tränke und Pfeile) stammen direkt aus Mojangs offiziellen Spieldateien. Die deutschen Namen kommen aus der offiziellen Sprachdatei `de_de.json`, die Fenstertitel ebenfalls („Handwerk“, „Ausrüstung aufwerten“).
+Die Daten (2.087 Rezepte, 1.842 Items inklusive aller Tränke und Pfeile) stammen direkt aus Mojangs offiziellen Spieldateien. Die deutschen Namen kommen aus der offiziellen Sprachdatei `de_de.json`, die Fenstertitel ebenfalls („Handwerk“, „Ausrüstung aufwerten“). Die Namen der übrigen Sprachen stammen genauso aus Mojangs Sprachdateien (`tools/build_names.mjs`).
 
 ### Original-Texturen
 
@@ -49,7 +49,7 @@ Voraussetzungen: Node.js 20+, Python 3.10+, für den Daten-Generator Java 25.
 
 ```bash
 npm install
-npm test                 # 147 Tests: Suche, Platzierung, Mengen, Brauen, alle Rezepte, Befehle, Fundorte, Muster
+npm test                 # 158 Tests: Suche, Platzierung, Mengen, Brauen, alle Rezepte, Befehle, Fundorte, Muster, 14 Sprachen
 npm run build            # → dist/pwa (installierbar) und dist/artifact (Vorschau-Seite)
 ```
 
@@ -60,6 +60,7 @@ python3 tools/build_data.py --version 26.3 --work ./_mc --java /pfad/zu/java25/b
 node tools/build_enchants.mjs   # Verzauberungen für die Befehle
 node tools/build_sources.mjs    # Fundorte: Erz-Höhen, Loot-Tabellen, Handel
 node tools/build_patterns.mjs   # Bannermuster und Krugscherben
+node tools/build_names.mjs      # Namenspakete der übrigen 12 Sprachen
 npm run build
 ```
 
@@ -93,7 +94,7 @@ Rezeptdaten und Item-Namen stammen aus Minecraft, © Mojang AB/Microsoft.
 
 | Area | Details |
 |---|---|
-| Search | English and German, forgives typos, plurals, missing umlauts and compound words |
+| Search | In the chosen language, plus English and German at all times; forgives typos, plurals, missing umlauts and compound words |
 | Amounts | “16 torches” calculates crafts, items per slot, leftovers, fuel, time and XP |
 | Stations | Crafting table (3×3), inventory (2×2), furnace, blast furnace, smoker, campfire, stonecutter, smithing table, brewing stand |
 | Display | Every recipe in an in-game style window, placed like the recipe book does |
@@ -102,7 +103,7 @@ Rezeptdaten und Item-Namen stammen aus Minecraft, © Mojang AB/Microsoft.
 | Commands | Ready `/give` commands per item, enchanted to the game maximum or overpowered, plus the full netherite set |
 | Where to find | Ore heights as a curve with the best level, block and mob drops, structure chests with biomes, fishing, trading – with exact chances |
 | Patterns | Design banners and shields at the loom (up to 6 patterns, preview, steps, command), arrange decorated pots from sherds |
-| Controls | Light/dark and German/English with one tap in the header |
+| Controls | Light/dark with one tap in the header, 14 languages (German, English, Spanish, French, Italian, Dutch, Polish, Portuguese, Turkish, Russian, Hindi, Chinese, Japanese, Korean) in the settings |
 | Offline | Works without a connection after the first visit |
 
 ### Original textures
@@ -120,7 +121,7 @@ npm install
 npm test
 npm run build
 python3 tools/build_data.py --version 26.3 --work ./_mc --java /path/to/java25/bin/java   # new game version
-node tools/build_enchants.mjs && node tools/build_sources.mjs && node tools/build_patterns.mjs
+node tools/build_enchants.mjs && node tools/build_sources.mjs && node tools/build_patterns.mjs && node tools/build_names.mjs
 ```
 
 ### Legal

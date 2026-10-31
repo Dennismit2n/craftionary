@@ -1,5 +1,7 @@
 // Craftionary – Datenbank & Rezeptlogik (ohne DOM, testbar in Node)
 
+import { loc, orWord } from './loc.js';
+
 export const STATIONS = [
   { id: 'crafting', block: 'crafting_table', title: 'container.crafting', name: 'block.minecraft.crafting_table', grid: 3 },
   { id: 'inventory', block: null, title: 'container.crafting', name: null, grid: 2 },
@@ -85,14 +87,14 @@ export class DB {
   }
 
   ingLabel(ref, lang) {
-    const li = lang === 'de' ? 1 : 0;
     if (Array.isArray(ref)) {
       const names = ref.map((id) => this.name(id, lang));
-      return names.length <= 3 ? names.join(lang === 'de' ? ' oder ' : ' or ') : names.slice(0, 2).join(', ') + ' …';
+      return names.length <= 3 ? names.join(orWord(lang)) : names.slice(0, 2).join(', ') + ' …';
     }
     if (ref.startsWith('#')) {
-      const tn = this.tagNames[ref.slice(1)];
-      return tn ? tn[li] : ref;
+      const tag = ref.slice(1);
+      const tn = this.tagNames[tag];
+      return tn ? loc(tn, 'tags', tag, lang) : ref;
     }
     return this.fullName(ref, lang);
   }
@@ -100,19 +102,19 @@ export class DB {
   name(id, lang) {
     const it = this.items[id];
     if (!it) return id;
-    return it.n[lang === 'de' ? 1 : 0];
+    return loc(it.n, 'items', id, lang);
   }
 
   sub(id, lang) {
     const it = this.items[id];
-    return it && it.sub ? it.sub[lang === 'de' ? 1 : 0] : '';
+    return it && it.sub ? loc(it.sub, 'subs', id, lang) : '';
   }
 
   /** Anzeige-Name inkl. Untertitel bzw. Trank-Stufe, damit gleichnamige Items unterscheidbar sind */
   fullName(id, lang) {
     const base = this.name(id, lang);
     const sub = this.sub(id, lang) || this.potionTag(id, lang);
-    return sub ? `${base} – ${sub}` : base;
+    return sub ? `${base} · ${sub}` : base;
   }
 
   /** Kurzform wie im Tooltip des Spiels: Stufe und Dauer der ersten Wirkung, z. B. „II · 1:30“ oder „8:00“ */
@@ -120,7 +122,8 @@ export class DB {
     const p = this.potionInfo(id);
     if (!p || !p.effects.length) return '';
     const e = p.effects[0];
-    const lvl = e.amp > 0 ? (this.ui['potion.potency.' + e.amp] || ['', ''])[lang === 'de' ? 1 : 0] : '';
+    const pk = 'potion.potency.' + e.amp;
+    const lvl = e.amp > 0 && this.ui[pk] ? loc(this.ui[pk], 'ui', pk, lang) : '';
     let dur = '';
     if (!e.instant) {
       const sec = Math.floor(e.ticks / 20);

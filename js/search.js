@@ -1,28 +1,47 @@
-// Craftionary – fehlertolerante Suche (Deutsch & Englisch)
+// Craftionary – fehlertolerante Suche in allen 14 Sprachen (Namen der gewählten Sprache, dazu immer Englisch und Deutsch)
 // Reines ES-Modul ohne DOM, damit es auch in Node getestet werden kann.
 
 const STOPWORDS = new Set([
   'der', 'die', 'das', 'des', 'den', 'dem', 'ein', 'eine', 'einen', 'einer', 'eines', 'und', 'oder', 'mit',
   'aus', 'von', 'vom', 'zum', 'zur', 'fuer', 'fur', 'the', 'of', 'a', 'an', 'and', 'or', 'with', 'from', 'for',
   'ich', 'brauche', 'will', 'moechte', 'mochte', 'wie', 'mache', 'craft', 'crafte', 'craften', 'how', 'to', 'make',
-  'i', 'need', 'want', 'bitte', 'please', 'herstellen', 'baue', 'bauen', 'was', 'etwas', 'zu', 'something', 'some'
+  'i', 'need', 'want', 'bitte', 'please', 'herstellen', 'baue', 'bauen', 'was', 'etwas', 'zu', 'something', 'some',
+  // Artikel und kleine Bindewörter der übrigen Sprachen (stehen auch in den Namen, zählen dort aber nicht als Treffer)
+  'la', 'el', 'los', 'las', 'del', 'un', 'una', 'le', 'les', 'du', 'des', 'une', 'en', 'il', 'lo', 'gli', 'di', 'da', 'della',
+  'do', 'dos', 'das', 'o', 'um', 'uma', 'het', 'een', 'van', 'z', 'ze', 'na', 've', 'bir', 'и', 'с', 'из'
 ]);
+
+// Schriften ohne Leerzeichen zwischen Wörtern und mit viel Inhalt pro Zeichen (Chinesisch, Japanisch, Koreanisch):
+// dort gelten kürzere Mindestlängen, weniger Tippfehler und Zweiergruppen statt Dreiergruppen
+const WIDE = /[\u1100-\u11ff\u3040-\u30ff\u3130-\u318f\u3400-\u9fff\uac00-\ud7af\uf900-\ufaff]/;
+export const isWide = (s) => WIDE.test(s);
+/** Länge nach Informationsgehalt: ein Schriftzeichen zählt wie zwei Buchstaben */
+const elen = (s) => (isWide(s) ? s.length * 2 : s.length);
+// Zählwörter nach einer Menge: 16个火把, 松明 16個, 횃불 16개
+const COUNTER = '(?:个|個|根|块|塊|本|枚|つ|张|張|개|장|병)';
 
 const UNIT_WORDS = /\b(stueck|stuck|stk|pcs|pieces?|mal|x)\b/g;
 
-/** Kanonische Form: klein, Umlaute → ae/oe/ue, ß → ss, Akzente weg, nur [a-z0-9 ] */
+/**
+ * Kanonische Form: klein, Umlaute → ae/oe/ue, ß → ss, lateinische Akzente weg (ł, ø, æ, œ, ı eingeschlossen),
+ * Katakana wie Hiragana, Vollbreite wie normale Zeichen; Buchstaben aller Schriften bleiben, der Rest wird Leerzeichen.
+ */
 export function normalize(s) {
   return String(s)
+    .normalize('NFKC')
     .toLowerCase()
     .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/ł/g, 'l').replace(/ø/g, 'o').replace(/æ/g, 'ae').replace(/œ/g, 'oe').replace(/ı/g, 'i').replace(/đ/g, 'd')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '').normalize('NFC')
+    .replace(/[\u30a1-\u30f6]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0x60))
+    .replace(/[^\p{L}\p{N}\p{M}]+/gu, ' ')
     .trim();
 }
 
 /** Stamm für Vergleiche: ae/oe/ue → a/o/u, typische Plural- und Flexionsendungen ab. */
 export function stem(token) {
   let t = token.replace(/ae/g, 'a').replace(/oe/g, 'o').replace(/ue/g, 'u');
+  if (t.length >= 7) t = t.replace(/(ler|lar)$/, ''); // türkische Mehrzahl: meşaleler → meşale
   if (t.length > 5) t = t.replace(/(ern|ies)$/, (m) => (m === 'ies' ? 'y' : ''));
   if (t.length > 4) t = t.replace(/(en|er|es|e|n|s)$/, '');
   else if (t.length === 4) t = t.replace(/[en]$/, '');
@@ -118,8 +137,9 @@ export function chunkCoverage(q, t, minLen = 3) {
   return { qCov: q.length ? matched / q.length : 0, kCov: t.length ? matched / t.length : 0, chunks, matched };
 }
 
-/** Wie viele Tippfehler wir bei einer Wortlänge tolerieren */
-export function allowedEdits(len) {
+/** Wie viele Tippfehler wir bei einer Wortlänge tolerieren (wide: Schriftzeichen statt Buchstaben) */
+export function allowedEdits(len, wide = false) {
+  if (wide) return len <= 2 ? 0 : len <= 5 ? 1 : 2;
   if (len <= 3) return 0;
   if (len <= 5) return 1;
   if (len <= 9) return 2;
@@ -130,12 +150,14 @@ export function allowedEdits(len) {
 export function parseQuery(raw) {
   let text = normalize(raw);
   let qty = null;
-  let m = text.match(/^(\d{1,5})\s*x?\s+(.+)$/) || text.match(/^(\d{1,5})x\s*(.+)$/);
+  let m = text.match(/^(\d{1,5})\s*x?\s+(.+)$/) || text.match(/^(\d{1,5})x\s*(.+)$/)
+    || text.match(new RegExp(`^(\\d{1,5})\\s*${COUNTER}\\s*(?:の\\s*)?(.+)$`));
   if (m) {
     qty = parseInt(m[1], 10);
     text = m[2];
   } else {
-    m = text.match(/^(.+?)\s+x\s*(\d{1,5})$/) || text.match(/^(.+?)\s+(\d{1,5})\s*x$/) || text.match(/^(.+?)\s*x(\d{1,5})$/);
+    m = text.match(/^(.+?)\s+x\s*(\d{1,5})$/) || text.match(/^(.+?)\s+(\d{1,5})\s*x$/) || text.match(/^(.+?)\s*x(\d{1,5})$/)
+      || text.match(new RegExp(`^(.+?)\\s*(\\d{1,5})\\s*${COUNTER}$`));
     if (m) {
       qty = parseInt(m[2], 10);
       text = m[1];
@@ -150,9 +172,11 @@ function tokenize(norm) {
   return norm.split(' ').filter(Boolean);
 }
 
+/** Dreiergruppen als Vorfilter; bei Schriftzeichen Zweiergruppen */
 function trigrams(s) {
+  const n = isWide(s) ? 2 : 3;
   const out = new Set();
-  for (let i = 0; i + 3 <= s.length; i++) out.add(s.substr(i, 3));
+  for (let i = 0; i + n <= s.length; i++) out.add(s.substr(i, n));
   return out;
 }
 
@@ -166,7 +190,7 @@ function makeKey(str, lang, kind) {
   const starts = new Set(), ends = new Set();
   let off = 0;
   for (const t of all) { starts.add(off); off += t.length; ends.add(off); }
-  return { lang, kind, n, c, tokens, stems: tokens.map(stem), starts, ends, tri: trigrams(c) };
+  return { lang, kind, n, c, tokens, stems: tokens.map(stem), starts, ends, tri: trigrams(c), wide: isWide(c) };
 }
 
 const TECHNICAL = /(spawn_egg|command_block|structure_|jigsaw|barrier|debug_stick|knowledge_book|test_block|test_instance|^light$|^air$|petrified_oak_slab|^bedrock$|end_portal_frame|reinforced_deepslate|spawner$|budding_amethyst|^vault$|trial_spawner|farmland|dirt_path|chorus_plant|frogspawn|infested_)/;
@@ -174,11 +198,12 @@ const TECHNICAL = /(spawn_egg|command_block|structure_|jigsaw|barrier|debug_stic
 /**
  * Index aufbauen.
  * items: { id: {n:[en,de], sub?:[en,de], group?, base?, potion?} }
- * extra: { aliases: { id: [{text, lang}] } }
+ * extra: { aliases: { id: [{text, lang}] }, loc: Sprachpaket { lang, items: {id: Name}, subs: {id: Untertitel} } }
  */
 export function buildIndex(items, extra = {}) {
   const entries = [];
   const aliases = extra.aliases || {};
+  const loc = extra.loc && extra.loc.items ? extra.loc : null;
   for (const [id, it] of Object.entries(items)) {
     if (it.group || id === 'air') continue;
     const keys = [];
@@ -189,6 +214,11 @@ export function buildIndex(items, extra = {}) {
     if (normalize(en) !== normalize(de)) keys.push(makeKey(en, 'en', 'name'));
     if (subDe) keys.push(makeKey(`${de} ${subDe}`, 'de', 'sub'), makeKey(subDe, 'de', 'subonly'));
     if (subEn) keys.push(makeKey(`${en} ${subEn}`, 'en', 'sub'), makeKey(subEn, 'en', 'subonly'));
+    if (loc) {
+      const name = loc.items[id], sub = loc.subs && loc.subs[id];
+      if (name && normalize(name) !== normalize(en) && normalize(name) !== normalize(de)) keys.push(makeKey(name, loc.lang, 'name'));
+      if (name && sub) keys.push(makeKey(`${name} ${sub}`, loc.lang, 'sub'), makeKey(sub, loc.lang, 'subonly'));
+    }
     keys.push(makeKey(id.replace(/[._]/g, ' '), 'id', 'id'));
     for (const a of aliases[id] || []) keys.push(makeKey(a.text, a.lang || 'any', 'alias'));
     entries.push({ id, it, keys, technical: TECHNICAL.test(id), craftable: !!it.mk });
@@ -201,16 +231,16 @@ function wordScore(qt, qs, kt, ks) {
   if (kt === qt) return 1;
   // Plural/Flexion („Fackeln“ → Fackel, „Äxte“ → Axt), aber nicht „Eisen“ → „Eis“
   if (ks === qs && qs.length >= 3 && (kt.length >= 4 || /(ae|oe|ue)/.test(qt))) return 0.97;
-  if (qt.length >= 3 && kt.startsWith(qt)) return 0.9 - 0.2 * (1 - qt.length / kt.length);
+  if (elen(qt) >= 3 && kt.startsWith(qt)) return 0.9 - 0.2 * (1 - qt.length / kt.length);
   // deutsches Kompositum: Grundwort steht hinten („Holzaxt“ ist eine Axt)
-  if (qs.length >= 3 && ks.length > qs.length && ks.endsWith(qs)) return 0.86 - 0.1 * (1 - qs.length / ks.length);
-  if (qt.length >= 4 && kt.includes(qt)) return 0.82 - 0.15 * (1 - qt.length / kt.length);
-  if (kt.length >= 4 && qt.includes(kt)) return 0.8 * (kt.length / qt.length) + 0.1;
-  const allowed = allowedEdits(qt.length);
+  if (elen(qs) >= 3 && ks.length > qs.length && ks.endsWith(qs)) return 0.86 - 0.1 * (1 - qs.length / ks.length);
+  if (elen(qt) >= 4 && kt.includes(qt)) return 0.82 - 0.15 * (1 - qt.length / kt.length);
+  if (elen(kt) >= 4 && qt.includes(kt)) return 0.8 * (kt.length / qt.length) + 0.1;
+  const allowed = allowedEdits(qt.length, isWide(qt));
   if (allowed > 0) {
     const d = editDistance(qs, ks, allowed);
     if (d <= allowed) return 0.88 * (1 - (d / Math.max(qs.length, ks.length)) * 0.9);
-    if (qt.length >= 6 && kt.length > qt.length) {
+    if (elen(qt) >= 6 && kt.length > qt.length) {
       const sd = substringDistance(qt, kt);
       if (sd <= (qt.length >= 10 ? allowed : allowed - 1)) return 0.78 * (1 - sd / qt.length);
     }
@@ -251,7 +281,7 @@ function scoreKey(q, key) {
   // 2) zusammenhängend im Namen enthalten
   const pos = key.c.indexOf(qc);
   if (pos === 0) return (key.ends.has(qc.length) ? 91 : 87) + 6 * ratio;
-  if (pos > 0 && qc.length >= 3) {
+  if (pos > 0 && elen(qc) >= 3) {
     const atStart = key.starts.has(pos), atEnd = key.ends.has(pos + qc.length);
     const base = atStart ? 84 : atEnd ? 82 : 76; // Ende eines Worts = Grundwort im Kompositum
     return base + 6 * ratio - Math.min(3, pos * 0.15);
@@ -263,12 +293,13 @@ function scoreKey(q, key) {
   // gemeinsame Trigramme als günstiger Vorfilter für die teuren Vergleiche
   let shared = 0;
   if (q.tri.size) for (const g of q.tri) if (key.tri.has(g)) shared++;
-  const allowedFull = allowedEdits(qc.length);
+  const wide = q.wide;
+  const allowedFull = allowedEdits(qc.length, wide);
 
   // 3) Kompositum in anderer Reihenfolge / Mittelteil weggelassen („eichenbretter“)
-  if (qc.length >= 6 && shared * 3 >= qc.length * 0.6) {
-    const cc = chunkCoverage(qc, key.c);
-    if (cc.qCov >= 0.85 && cc.matched / Math.max(1, cc.chunks) >= 4) {
+  if (elen(qc) >= 6 && shared * (wide ? 2 : 3) >= qc.length * 0.6) {
+    const cc = chunkCoverage(qc, key.c, wide ? 2 : 3);
+    if (cc.qCov >= 0.85 && cc.matched / Math.max(1, cc.chunks) >= (wide ? 2 : 4)) {
       s = Math.max(s, (62 + 18 * cc.kCov) * cc.qCov);
     }
   }
@@ -277,7 +308,7 @@ function scoreKey(q, key) {
   if (allowedFull > 0) {
     const d = editDistance(qc, key.c, allowedFull);
     if (d <= allowedFull) s = Math.max(s, 86 - d * 6 - Math.abs(qc.length - key.c.length) * 0.5);
-    else if (qc.length >= 7 && key.c.length > qc.length && shared >= Math.max(1, qc.length - 2 - 3 * allowedFull)) {
+    else if (elen(qc) >= 7 && key.c.length > qc.length && shared >= Math.max(1, qc.length - (wide ? 1 : 2) - (wide ? 2 : 3) * allowedFull)) {
       const sd = substringDistance(qc, key.c);
       if (sd <= (qc.length >= 10 ? allowedFull : allowedFull - 1)) s = Math.max(s, 72 - sd * 6 + 6 * ratio);
     }
@@ -314,7 +345,7 @@ export function search(index, raw, { lang = 'de', limit = 30, filter = null, min
   const sig = tokensAll.filter((t) => !STOPWORDS.has(t));
   const tokens = sig.length ? sig : tokensAll;
   const qc = tokens.join('');
-  const q = { c: qc, tokens, stems: tokens.map(stem), tri: trigrams(qc) };
+  const q = { c: qc, tokens, stems: tokens.map(stem), tri: trigrams(qc), wide: isWide(qc) };
   const results = [];
   if (!q.c) return { text, qty, results };
   for (const e of index.entries) {

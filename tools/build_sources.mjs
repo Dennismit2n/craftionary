@@ -5,9 +5,13 @@
 // Chancen gelten für den Normalfall: Spieler tötet bzw. baut ab, ohne Glück, Plünderung, Behutsamkeit oder Schere
 // (diese beiden werden zusätzlich durchgerechnet). Unbekannte Bedingungen (Feuer, Reittier, Ort …) gelten als nicht erfüllt.
 
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT, loadGame, strip } from './mojang.mjs';
+
+// Namen ohne Übersetzung im Spiel (Strukturen, Truhenteile, Quellen) stehen für alle 14 Sprachen in tools/names_extra.json, hier gelten Englisch und Deutsch
+const EXTRA = JSON.parse(readFileSync(join(ROOT, 'tools/names_extra.json'), 'utf8'));
+const enDe = (table) => Object.fromEntries(Object.entries(table).map(([k, v]) => [k, [v[0], v[1]]]));
 
 const { version, data, files, json, en, de } = await loadGame((f) =>
   /^data\/minecraft\/(loot_table|predicate|villager_trade|trade_set|tags\/(villager_trade|worldgen\/biome|item)|worldgen\/(structure|placed_feature|feature|biome|density_function\/overworld\/ore_vein|material_rule\/overworld))\/.+\.json$/.test(f));
@@ -200,28 +204,12 @@ function tradeTag(name, seen = new Set()) {
 }
 
 // ============================================================================ Namen der Quellen (Strukturen haben im Spiel keine Übersetzung)
-const STRUCT_NAMES = {
-  abandoned_camp: ['Abandoned Camp', 'Verlassenes Lager'], mineshaft: ['Mineshaft', 'Verlassene Mine'], ancient_city: ['Ancient City', 'Antike Stätte'],
-  bastion_remnant: ['Bastion Remnant', 'Bastionsruine'], buried_treasure: ['Buried Treasure', 'Vergrabener Schatz'], desert_pyramid: ['Desert Pyramid', 'Wüstentempel'],
-  end_city: ['End City', 'Endsiedlung'], igloo: ['Igloo', 'Iglu'], jungle_pyramid: ['Jungle Temple', 'Dschungeltempel'], fortress: ['Nether Fortress', 'Netherfestung'],
-  pillager_outpost: ['Pillager Outpost', 'Plünderer-Außenposten'], ruined_portal: ['Ruined Portal', 'Portalruine'], shipwreck: ['Shipwreck', 'Schiffswrack'],
-  dungeon: ['Dungeon', 'Verlies'], bonus_chest: ['Bonus Chest', 'Bonustruhe'], stronghold: ['Stronghold', 'Festung'], trial_chambers: ['Trial Chambers', 'Prüfungskammern'],
-  ocean_ruin: ['Ocean Ruins', 'Ozeanruine'], village: ['Village', 'Dorf'], mansion: ['Woodland Mansion', 'Waldanwesen'], trail_ruins: ['Trail Ruins', 'Pfadruine'],
-  desert_well: ['Desert Well', 'Wüstenbrunnen'], monument: ['Ocean Monument', 'Ozeanmonument'], swamp_hut: ['Swamp Hut', 'Sumpfhütte'], nether_fossil: ['Nether Fossil', 'Netherfossil'],
-};
-const PART_NAMES = {
-  common_chest: ['chest', 'Truhe'], secret_chest: ['secret chest', 'geheime Truhe'], barrel: ['barrel', 'Fass'], ice_box: ['ice box', 'Eiskiste'],
-  bridge: ['bridge', 'Brücke'], hoglin_stable: ['hoglin stable', 'Hoglinstall'], other: ['other chests', 'übrige Truhen'], treasure: ['treasure', 'Schatzkammer'],
-  dispenser: ['dispenser', 'Werfer'], map: ['map room', 'Kartenraum'], supply: ['supplies', 'Vorräte'], corridor: ['corridor', 'Gang'], crossing: ['crossing', 'Kreuzung'],
-  library: ['library', 'Bibliothek'], entrance: ['entrance', 'Eingang'], intersection: ['intersection', 'Kreuzung'], intersection_barrel: ['intersection barrel', 'Kreuzung (Fass)'],
-  reward: ['vault', 'Tresor'], reward_ominous: ['ominous vault', 'Unheilvoller Tresor'], big: ['large', 'groß'], small: ['small', 'klein'],
-  cold: ['cold', 'kalt'], warm: ['warm', 'warm'], common: ['common', 'häufig'], rare: ['rare', 'selten'],
-  desert_house: ['desert house', 'Wüstenhaus'], plains_house: ['plains house', 'Ebenenhaus'], savanna_house: ['savanna house', 'Savannenhaus'],
-  snowy_house: ['snowy house', 'Schneehaus'], taiga_house: ['taiga house', 'Taigahaus'], temple: ['temple', 'Tempel'], tannery: ['tannery', 'Gerberei'],
-};
+const STRUCT_NAMES = enDe(EXTRA.structs);
+const PART_NAMES = enDe(EXTRA.parts);
 const VILLAGE_PROF = { armorer: 'armorer', butcher: 'butcher', cartographer: 'cartographer', fisher: 'fisherman', fletcher: 'fletcher', mason: 'mason', shepherd: 'shepherd', toolsmith: 'toolsmith', weaponsmith: 'weaponsmith' };
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-const join2 = (a, b) => (b ? [`${a[0]} – ${cap(b[0])}`, `${a[1]} – ${b[1]}`] : a);
+// Struktur · Teil, ohne Gedankenstrich (tools/build_names.mjs setzt die übrigen Sprachen genauso zusammen)
+const join2 = (a, b) => (b ? [`${a[0]} · ${cap(b[0])}`, `${a[1]} · ${b[1]}`] : a);
 
 // Truhen-Tabelle → [Strukturname-Schlüssel, Teil-Name, Strukturen für die Biome]
 function chestInfo(key) {
@@ -258,15 +246,7 @@ function chestInfo(key) {
 const ALL_STRUCTS = ls('worldgen/structure').map((p) => idOf(p, 'worldgen/structure'));
 const expandStructs = (list) => (list ? list.split(',').flatMap((s) => (s.endsWith('*') ? ALL_STRUCTS.filter((x) => x.startsWith(s.slice(0, -1))) : [s])) : []);
 
-const OTHER_NAMES = {
-  'gameplay/fishing': [['Fishing', 'Angeln'], 'fish'], 'gameplay/cat_morning_gift': [['Cat morning gift', 'Geschenk einer Katze'], 'gift'],
-  'gameplay/piglin_bartering': [['Piglin bartering', 'Tauschhandel mit Piglins'], 'gift'], 'gameplay/sniffer_digging': [['Sniffer digging', 'Schnüffler gräbt'], 'gift'],
-  'gameplay/panda_sneeze': [['Panda sneeze', 'Niesender Panda'], 'gift'], 'gameplay/chicken_lay': [['Chicken lays', 'Huhn legt'], 'gift'],
-  'gameplay/armadillo_shed': [['Armadillo sheds', 'Gürteltier häutet sich'], 'gift'], 'gameplay/turtle_grow': [['Turtle grows up', 'Schildkröte wächst'], 'gift'],
-  'brush/armadillo': [['Brushing an armadillo', 'Gürteltier abbürsten'], 'gift'], 'carve/pumpkin': [['Carving a pumpkin', 'Kürbis schnitzen'], 'gift'],
-  'till/rooted_dirt': [['Tilling rooted dirt', 'Wurzelerde hacken'], 'gift'], 'harvest/beehive': [['Harvesting a beehive', 'Bienenstock ernten'], 'gift'],
-  'harvest/cave_vine': [['Harvesting cave vines', 'Höhlenranken ernten'], 'gift'], 'harvest/sweet_berry_bush': [['Harvesting sweet berries', 'Süßbeeren ernten'], 'gift'],
-};
+const OTHER_NAMES = Object.fromEntries(Object.entries(enDe(EXTRA.other)).map(([id, n]) => [id, [n, id === 'gameplay/fishing' ? 'fish' : 'gift']]));
 
 // ============================================================================ Quellen sammeln
 const items = data.items;
@@ -333,8 +313,9 @@ for (const path of ls('loot_table')) {
     for (const [item, s] of Object.entries(tableStats(id, NORMAL))) push(item, row(kind, id, s));
   } else if (dir === 'gameplay' && rest.startsWith('hero_of_the_village/')) {
     const prof = rest.split('/')[1].replace(/_gift$/, '');
-    const pn = prof === 'baby' ? ['Baby villager', 'Dorfbewohner-Kind'] : prof === 'unemployed' ? lang('entity.minecraft.villager.none', 'Villager') : lang(`entity.minecraft.villager.${prof}`, pretty(prof));
-    nameOf(`other:${id}`, [`Hero of the Village: ${pn[0]}`, `Held des Dorfes: ${pn[1]}`]);
+    const pn = prof === 'baby' ? enDe(EXTRA.special).babyVillager : prof === 'unemployed' ? lang('entity.minecraft.villager.none', 'Villager') : lang(`entity.minecraft.villager.${prof}`, pretty(prof));
+    const hero = lang('effect.minecraft.hero_of_the_village', 'Hero of the Village');
+    nameOf(`other:${id}`, [`${hero[0]}: ${pn[0]}`, `${hero[1]}: ${pn[1]}`]);
     for (const [item, s] of Object.entries(tableStats(id, NORMAL))) push(item, row('gift', id, s));
   }
 }

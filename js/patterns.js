@@ -1,6 +1,8 @@
 // Craftionary – Muster: Banner und Schild am Webstuhl gestalten, Verzierter Krug aus Scherben; Befehle und Vorschau
 // Daten aus data/patterns-<version>.json (tools/build_patterns.mjs)
 
+import { loc } from './loc.js';
+
 export const MAX_LAYERS = 6; // so viele Muster nimmt der Webstuhl
 export const POT_SIDES = ['back', 'left', 'right', 'front']; // Reihenfolge der Komponente pot_decorations
 export const POT_SLOT = { back: 1, left: 3, right: 5, front: 7 }; // Feld im 3×3-Raster der Werkbank
@@ -26,7 +28,7 @@ export const patternById = (pat, id) => pat.banner.find((b) => b.id === id) || n
 export function patternName(pat, id, color, lang) {
   const b = patternById(pat, id);
   if (!b) return id;
-  return b.n[lang === 'de' ? 1 : 0][Math.max(0, pat.colors.indexOf(color))];
+  return loc(b.n, 'pat', id, lang)[Math.max(0, pat.colors.indexOf(color))];
 }
 
 const snbtLayers = (layers) => `[${layers.map((l) => `{pattern:"${l.p}",color:"${l.c}"}`).join(',')}]`;

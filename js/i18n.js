@@ -1,7 +1,8 @@
-// Craftionary – Oberflächentexte Deutsch/Englisch
-// Itemnamen und Fenstertitel kommen aus den offiziellen Sprachdateien (data/<version>.json).
+// Craftionary – Oberflächentexte. Deutsch und Englisch stehen hier, die übrigen 12 Sprachen in i18n/<code>.json
+// (beim Bauen ins Sprachpaket data/lang-<version>/<code>.json gelegt und mit addTexts nachgeladen).
+// Itemnamen und Fenstertitel kommen aus den offiziellen Sprachdateien (data/<version>.json und die Sprachpakete).
 
-const T = {
+export const T = {
   de: {
     tagline: 'Rezept-Kompendium für Minecraft Java {v}',
     searchPlaceholder: 'Was brauchst du? z. B. „16 Fackeln“ oder „Holzspitzhake“',
@@ -23,11 +24,11 @@ const T = {
     themeInvert: 'Umgekehrte Farben',
     themeToLight: 'Zur hellen Darstellung wechseln',
     themeToDark: 'Zur dunklen Darstellung wechseln',
-    langSwitch: 'Sprache: auf Englisch umschalten',
     back: 'Zurück',
     home: 'Start',
+    skip: 'Zum Inhalt',
     stations: 'Stationen',
-    stationHint: 'Tasten 1–9 wechseln die Station',
+    stationHint: 'Tasten 1 bis 9 wechseln die Station',
     recipesN: { one: '{n} Rezept', other: '{n} Rezepte' },
     inventory: 'Inventar (2×2)',
     recipeBook: 'Rezeptbuch',
@@ -41,7 +42,7 @@ const T = {
     findBand: 'fast genauso gut (≥ 80 %): Y {a} bis {b}',
     findLow: 'Im normalen Gelände (bis Meereshöhe): beste Höhe Y {y}, ≥ 80 % von Y {a} bis {b}.',
     findMountain: 'Die beste Höhe gilt nur, wo ein Gebirge so hoch reicht.',
-    findAir: 'An Höhlenwänden siehst du nur rund {p} davon – Gänge graben lohnt sich.',
+    findAir: 'An Höhlenwänden siehst du nur rund {p} davon, Gänge graben lohnt sich.',
     findBiomesAll: 'In allen Biomen der Oberwelt.',
     findBiomes: 'Nur in diesen Biomen: {list}.',
     findVein: 'Große Erzadern aus {filler} mit {ore} (dazu {raw} mit {p}) von Y {lo} bis {hi}.',
@@ -62,9 +63,9 @@ const T = {
     perBrush: 'pro Pinseln',
     perFish: 'pro Fang',
     perTime: 'pro Mal',
-    flagFortune: 'Glück erhöht die Menge',
-    flagLooting: 'Plünderung erhöht die Menge',
-    flagSilk: 'nur mit Behutsamkeit',
+    flagFortune: '{e} erhöht die Menge',
+    flagLooting: '{e} erhöht die Menge',
+    flagSilk: 'nur mit {e}',
     flagShears: 'nur mit Schere',
     flagCreeper: 'Explosion eines geladenen Creepers',
     inBiomes: 'Biome ({n})',
@@ -74,7 +75,7 @@ const T = {
     tradeVariant: 'nur bei Dorfbewohnern aus {b}',
     showAll: 'Alle {n} zeigen',
     findNote: 'Chancen ohne Glück, Plünderung und Behutsamkeit, direkt aus den Spieldaten von Minecraft {v} gerechnet. Strukturnamen haben im Spiel keine offizielle Übersetzung.',
-    findNone: 'Dafür kennt Craftionary keinen Fundort – herstellen, Händler oder Spielwelt geben es nicht direkt her.',
+    findNone: 'Dafür kennt Craftionary keinen Fundort. Herstellen, Händler oder die Spielwelt geben es nicht direkt her.',
     noRecipe: 'Nicht herstellbar. Das findest du in der Welt, baust es ab, bekommst es von Kreaturen oder durch Handel.',
     noUse: 'Wird in keinem Rezept verwendet.',
     recipeOf: 'Rezept {i} von {n}',
@@ -126,13 +127,13 @@ const T = {
     usedAs: { input: 'Zutat', fuel: 'Brennstoff', reagent: 'Zutat (Braustand)', base: 'Ausgangstrank', template: 'Vorlage', addition: 'Material', basepiece: 'Gegenstand' },
     special: {
       transmute: 'Färbt um, der Inhalt bleibt erhalten.',
-      transmuteMap: 'Ausgefüllte Karte + 1–8 leere Karten → entsprechend viele Kopien.',
-      dye: 'Mit 1–8 Farbstoffen färben; mehrere Farbstoffe werden gemischt.',
+      transmuteMap: 'Ausgefüllte Karte + 1 bis 8 leere Karten → entsprechend viele Kopien.',
+      dye: 'Mit 1 bis 8 Farbstoffen färben, mehrere Farbstoffe werden gemischt.',
       imbue: '8 Pfeile um einen Verweiltrank legen.',
       pot: 'Ziegel oder Töpferscherben. Jede Scherbe zeigt ihr Motiv auf der jeweiligen Seite.',
       bannerCopy: 'Gemustertes Banner + leeres Banner gleicher Farbe → Kopie. Das Original bleibt erhalten.',
-      bookCopy: 'Beschriebenes Buch + 1–8 Bücher und Federn → Kopien. Das Original bleibt erhalten.',
-      rocket: '1–3 Schwarzpulver bestimmen die Flugdauer. Optional bis zu 7 Feuerwerkssterne für Effekte.',
+      bookCopy: 'Beschriebenes Buch + 1 bis 8 Bücher und Federn → Kopien. Das Original bleibt erhalten.',
+      rocket: '1 bis 3 Schwarzpulver bestimmen die Flugdauer. Optional bis zu 7 Feuerwerkssterne für Effekte.',
       star: 'Schwarzpulver + Farbstoff(e). Optional: Form ({shapes}), Diamant für Schweif, Glowstone-Staub für Funkeln.',
       starFade: 'Feuerwerksstern + Farbstoff(e) → Farbwechsel beim Verblassen.',
       mapExtend: 'Karte in die Mitte, 8 Papier außen herum: Die Karte zoomt eine Stufe heraus.',
@@ -164,6 +165,8 @@ const T = {
     texturesProgressRender: 'Zeichne Icons … {n} / {t}',
     texturesDone: 'Fertig: {n} Icons gespeichert.',
     texturesFailed: 'Das hat nicht geklappt: {e}',
+    texturesChecksum: 'Die Prüfsumme stimmt nicht, der Download ist beschädigt. Versuch es noch einmal.',
+    texturesNoStorage: 'Dieser Browser kann hier nichts speichern (IndexedDB fehlt).',
     texturesWrongFile: 'Diese Datei enthält keine Minecraft-Texturen. Nimm die client.jar bzw. {v}.jar.',
     texturesBlocked: 'Der Download von Mojang ist hier gesperrt. Wähl die Datei von deinem Rechner.',
     texturesPreview: 'In dieser Vorschau geht nur der Weg über die Datei. In der installierten App lädt Craftionary die Texturen auch direkt von Mojang.',
@@ -230,9 +233,16 @@ const T = {
     obtainWater: 'Glasflasche an Wasser benutzen, z. B. an einem Kessel oder einer Wasserquelle.',
     loading: 'Lade Rezepte …',
     loadFailed: 'Rezeptdaten konnten nicht geladen werden.',
-    keys: 'Tastatur: / sucht · 1–9 wählt die Station · Esc schließt',
+    keys: 'Tastatur: / sucht · 1 bis 9 wählt die Station · Esc schließt',
     dataLine: 'Daten: Minecraft {v} · Datenpaket-Format {dp} · {n} Items · Stand {d}',
     busy: 'Läuft schon …',
+    langOpen: 'Sprache: {name}. Ändern in den Einstellungen',
+    heroTitle: 'Sag, was du brauchst.',
+    heroSub: 'Tippfehler, Mehrzahl, Englisch oder Deutsch: Craftionary findet das Rezept und zeigt es dir so, wie du es im Spiel legst.',
+    oftenNeeded: 'Oft gebraucht',
+    leftOverList: 'Übrig: {list}',
+    orJoin: ' oder ',
+    examples: ['16 Fackeln', 'Holzspitzhake', 'Trank der Nachtsicht', 'Netheritschwert', 'Leuchtfeuer', 'eichenbretter'],
   },
   en: {
     tagline: 'Recipe compendium for Minecraft Java {v}',
@@ -255,11 +265,11 @@ const T = {
     themeInvert: 'Inverted colors',
     themeToLight: 'Switch to light mode',
     themeToDark: 'Switch to dark mode',
-    langSwitch: 'Language: switch to German',
     back: 'Back',
     home: 'Home',
+    skip: 'Skip to content',
     stations: 'Stations',
-    stationHint: 'Keys 1–9 switch the station',
+    stationHint: 'Keys 1 to 9 switch the station',
     recipesN: { one: '{n} recipe', other: '{n} recipes' },
     inventory: 'Inventory (2×2)',
     recipeBook: 'Recipe book',
@@ -273,7 +283,7 @@ const T = {
     findBand: 'nearly as good (≥ 80%): Y {a} to {b}',
     findLow: 'In normal terrain (up to sea level): best height Y {y}, ≥ 80% from Y {a} to {b}.',
     findMountain: 'The best height only counts where mountains reach that high.',
-    findAir: 'Only about {p} of it shows on cave walls – digging tunnels pays off.',
+    findAir: 'Only about {p} of it shows on cave walls, so digging tunnels pays off.',
     findBiomesAll: 'In every Overworld biome.',
     findBiomes: 'Only in these biomes: {list}.',
     findVein: 'Large ore veins of {filler} with {ore} (plus {raw} at {p}) from Y {lo} to {hi}.',
@@ -294,9 +304,9 @@ const T = {
     perBrush: 'per brushing',
     perFish: 'per catch',
     perTime: 'each time',
-    flagFortune: 'Fortune increases the amount',
-    flagLooting: 'Looting increases the amount',
-    flagSilk: 'Silk Touch only',
+    flagFortune: '{e} increases the amount',
+    flagLooting: '{e} increases the amount',
+    flagSilk: '{e} only',
     flagShears: 'shears only',
     flagCreeper: 'charged creeper explosion',
     inBiomes: 'Biomes ({n})',
@@ -306,7 +316,7 @@ const T = {
     tradeVariant: 'only from {b} villagers',
     showAll: 'Show all {n}',
     findNote: 'Chances without Fortune, Looting or Silk Touch, calculated straight from the Minecraft {v} game data. Structure names have no official in-game translation.',
-    findNone: 'Craftionary knows no place to find this – it is not dropped, looted or traded directly.',
+    findNone: 'Craftionary knows no place to find this. It is not dropped, looted or traded directly.',
     noRecipe: 'Not craftable. You find it in the world, mine it, get it from mobs or by trading.',
     noUse: 'Not used in any recipe.',
     recipeOf: 'Recipe {i} of {n}',
@@ -357,14 +367,14 @@ const T = {
     upgradeNote: 'The template is used up. Enchantments are kept.',
     usedAs: { input: 'Ingredient', fuel: 'Fuel', reagent: 'Ingredient (brewing)', base: 'Base potion', template: 'Template', addition: 'Material', basepiece: 'Item' },
     special: {
-      transmute: 'Recolors the item; its contents are kept.',
-      transmuteMap: 'Filled map + 1–8 empty maps → that many extra copies.',
-      dye: 'Dye with 1–8 dyes; several dyes are mixed.',
+      transmute: 'Recolors the item, its contents are kept.',
+      transmuteMap: 'Filled map + 1 to 8 empty maps → that many extra copies.',
+      dye: 'Dye with 1 to 8 dyes, several dyes are mixed.',
       imbue: 'Put 8 arrows around a lingering potion.',
       pot: 'Bricks or pottery sherds. Each sherd shows its motif on that side.',
       bannerCopy: 'Patterned banner + blank banner of the same color → copy. The original is kept.',
-      bookCopy: 'Written book + 1–8 books and quills → copies. The original is kept.',
-      rocket: '1–3 gunpowder set the flight duration. Optionally up to 7 firework stars for effects.',
+      bookCopy: 'Written book + 1 to 8 books and quills → copies. The original is kept.',
+      rocket: '1 to 3 gunpowder set the flight duration. Optionally up to 7 firework stars for effects.',
       star: 'Gunpowder + dye(s). Optional: shape ({shapes}), diamond for a trail, glowstone dust for twinkle.',
       starFade: 'Firework star + dye(s) → fade colors.',
       mapExtend: 'Map in the middle, 8 paper around it: the map zooms out one level.',
@@ -396,6 +406,8 @@ const T = {
     texturesProgressRender: 'Drawing icons … {n} / {t}',
     texturesDone: 'Done: {n} icons saved.',
     texturesFailed: 'That did not work: {e}',
+    texturesChecksum: 'The checksum does not match, the download is damaged. Try again.',
+    texturesNoStorage: 'This browser cannot store anything here (IndexedDB is missing).',
     texturesWrongFile: 'This file has no Minecraft textures. Use client.jar or {v}.jar.',
     texturesBlocked: 'Downloading from Mojang is blocked here. Choose the file from your computer.',
     texturesPreview: 'In this preview only the file option works. The installed app can also load the textures straight from Mojang.',
@@ -462,43 +474,88 @@ const T = {
     obtainWater: 'Use a glass bottle on water, e.g. a cauldron or a water source.',
     loading: 'Loading recipes …',
     loadFailed: 'Could not load the recipe data.',
-    keys: 'Keyboard: / searches · 1–9 picks a station · Esc closes',
+    keys: 'Keyboard: / searches · 1 to 9 picks a station · Esc closes',
     dataLine: 'Data: Minecraft {v} · data pack format {dp} · {n} items · built {d}',
     busy: 'Already running …',
+    langOpen: 'Language: {name}. Change it in the settings',
+    heroTitle: 'Say what you need.',
+    heroSub: 'Typos, plurals, English or German: Craftionary finds the recipe and shows it the way you place it in the game.',
+    oftenNeeded: 'Often needed',
+    leftOverList: 'Left over: {list}',
+    orJoin: ' or ',
+    examples: ['16 torches', 'wodden pickaxe', 'potion of night vision', 'netherite sword', 'beacon', 'oak planks'],
   },
 };
 
-let current = 'de';
-const PLURAL = { de: new Intl.PluralRules('de-DE'), en: new Intl.PluralRules('en-US') };
+// Reihenfolge und Namen wie auf der Startseite der Werkstatt
+export const LANGS = [['de', 'Deutsch'], ['en', 'English'], ['es', 'Español'], ['fr', 'Français'], ['it', 'Italiano'], ['nl', 'Nederlands'],
+  ['pl', 'Polski'], ['pt', 'Português'], ['tr', 'Türkçe'], ['ru', 'Русский'], ['hi', 'हिन्दी'], ['zh', '中文'], ['ja', '日本語'], ['ko', '한국어']];
+const LOCALE = { de: 'de-DE', en: 'en-US', es: 'es-ES', fr: 'fr-FR', it: 'it-IT', nl: 'nl-NL', pl: 'pl-PL', pt: 'pt-BR', tr: 'tr-TR',
+  ru: 'ru-RU', hi: 'hi-IN', zh: 'zh-CN', ja: 'ja-JP', ko: 'ko-KR' };
 
-export function setLang(l) { current = T[l] ? l : 'en'; }
+// Bis das Sprachpaket da ist, steht nur die Ladezeile auf dem Schirm (Texte wie in i18n/<code>.json, ein Test hält beides gleich)
+export const BOOT = {
+  es: ['Cargando recetas …', 'No se pudieron cargar los datos de las recetas.'],
+  fr: ['Chargement des recettes …', 'Impossible de charger les données des recettes.'],
+  it: ['Caricamento delle ricette …', 'Impossibile caricare i dati delle ricette.'],
+  nl: ['Recepten laden …', 'De receptgegevens konden niet worden geladen.'],
+  pl: ['Wczytywanie receptur …', 'Nie udało się wczytać danych receptur.'],
+  pt: ['Carregando receitas …', 'Não foi possível carregar os dados das receitas.'],
+  tr: ['Tarifler yükleniyor …', 'Tarif verileri yüklenemedi.'],
+  ru: ['Загрузка рецептов …', 'Не удалось загрузить данные рецептов.'],
+  hi: ['रेसिपी लोड हो रही हैं …', 'रेसिपी का डेटा लोड नहीं हो सका।'],
+  zh: ['正在载入配方 …', '无法载入配方数据。'],
+  ja: ['レシピを読み込み中 …', 'レシピのデータを読み込めませんでした。'],
+  ko: ['레시피 불러오는 중 …', '레시피 데이터를 불러오지 못했습니다.'],
+};
+for (const [l, [loading, loadFailed]] of Object.entries(BOOT)) T[l] = { loading, loadFailed };
+
+let current = 'de';
+const PLURAL = {};
+
+export const isBaseLang = (l) => l === 'de' || l === 'en';
+export function setLang(l) { current = LOCALE[l] ? l : 'en'; }
 export function getLang() { return current; }
+/** BCP-47-Gebietsschema für Intl (Zahlen, Datum, Sortierung) */
+export function locale(l = current) { return LOCALE[l] || 'en-US'; }
+
+/** Oberflächentexte einer Sprache aus dem Sprachpaket übernehmen */
+export function addTexts(l, table) { if (LOCALE[l] && !isBaseLang(l) && table) T[l] = table; }
+export const hasTexts = (l) => !!(T[l] && T[l].tagline);
+
+const PLURAL_FORMS = new Set(['zero', 'one', 'two', 'few', 'many', 'other']);
+const isPlural = (v) => v && typeof v === 'object' && !Array.isArray(v) && 'other' in v && Object.keys(v).every((k) => PLURAL_FORMS.has(k));
 
 /**
  * Text holen, Platzhalter {x} ersetzen. Verschachtelte Schlüssel mit Punkt: t('cat.food').
- * Einzahl/Mehrzahl: Ist der Text ein Objekt { one, other }, entscheidet vars.count (sonst vars.n).
+ * Mehrzahl: Ist der Text ein Objekt { one, few, many, other }, entscheidet vars.count (sonst vars.n) nach den Regeln der Sprache.
  */
 export function t(key, vars) {
   const find = (lang) => key.split('.').reduce((o, k) => (o ? o[k] : undefined), T[lang]);
   let v = find(current);
   if (v === undefined) v = find('en') ?? key;
-  if (v && typeof v === 'object' && 'other' in v) {
+  if (isPlural(v)) {
     const c = Number(vars?.count ?? vars?.n);
-    v = (Number.isFinite(c) && v[PLURAL[current].select(c)]) || v.other;
+    const rules = PLURAL[current] || (PLURAL[current] = new Intl.PluralRules(LOCALE[current]));
+    v = (Number.isFinite(c) && v[rules.select(c)]) || v.other;
   }
   if (vars && typeof v === 'string') v = v.replace(/\{(\w+)\}/g, (_, k) => (vars[k] ?? `{${k}}`));
   return v;
 }
 
+/** Gespeicherte Wahl, sonst die erste unterstützte Sprache des Browsers, sonst Englisch */
 export function detectLang() {
   try {
     const saved = localStorage.getItem('craftionary.lang');
-    if (saved === 'de' || saved === 'en') return saved;
+    if (saved && LOCALE[saved]) return saved;
   } catch { /* privater Modus */ }
-  const nav = (navigator.languages || [navigator.language || 'en']).join(',').toLowerCase();
-  return /(^|,)de/.test(nav) ? 'de' : 'en';
+  for (const tag of navigator.languages || [navigator.language || 'en']) {
+    const l = String(tag).toLowerCase().split('-')[0];
+    if (LOCALE[l]) return l;
+  }
+  return 'en';
 }
 
 export function numberFmt(n, digits = 0) {
-  return new Intl.NumberFormat(current === 'de' ? 'de-DE' : 'en-US', { maximumFractionDigits: digits }).format(n);
+  return new Intl.NumberFormat(LOCALE[current], { maximumFractionDigits: digits }).format(n);
 }

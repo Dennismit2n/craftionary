@@ -31,7 +31,7 @@ export async function fetchCached(url, file, hash) {
   return buf;
 }
 
-/** Version, App-Daten, entpackte Jar-Dateien (gefiltert) und Sprachdateien en/de */
+/** Version, App-Daten, entpackte Jar-Dateien (gefiltert), Sprachdateien en/de und der Asset-Index (für weitere Sprachen) */
 export async function loadGame(filter) {
   const work = workDir();
   const version = JSON.parse(readFileSync(join(ROOT, 'data/versions.json'), 'utf8')).default;
@@ -43,11 +43,17 @@ export async function loadGame(filter) {
   if (!entry) throw new Error(`Version ${version} nicht im Manifest`);
   const vjson = JSON.parse(await fetchCached(entry.url, join(work, `${version}.json`), entry.sha1));
   const index = JSON.parse(await fetchCached(vjson.assetIndex.url, join(work, `assetindex-${vjson.assetIndex.id}.json`), vjson.assetIndex.sha1));
-  const deObj = index.objects['minecraft/lang/de_de.json'];
-  const de = JSON.parse(await fetchCached(RESOURCES(deObj.hash), join(work, `de_de-${version}.json`), deObj.hash));
+  const de = await langFile(index, version, 'de_de');
   const dec = new TextDecoder();
   const json = (path) => JSON.parse(dec.decode(files[path]));
-  return { version, data, files, json, en: json('assets/minecraft/lang/en_us.json'), de };
+  return { version, data, files, json, en: json('assets/minecraft/lang/en_us.json'), de, index };
+}
+
+/** Offizielle Sprachdatei aus dem Asset-Index (z. B. 'fr_fr'), wie de_de.json mit Cache und SHA-1-Prüfung */
+export async function langFile(index, version, code) {
+  const obj = index.objects[`minecraft/lang/${code}.json`];
+  if (!obj) throw new Error(`${code}.json fehlt im Asset-Index`);
+  return JSON.parse(await fetchCached(RESOURCES(obj.hash), join(workDir(), `${code}-${version}.json`), obj.hash));
 }
 
 export const strip = (s) => (typeof s === 'string' ? s.replace(/^minecraft:/, '') : s);

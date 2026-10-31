@@ -3,6 +3,7 @@
 import { STATION_BY_ID } from './db.js';
 import { t, getLang, numberFmt } from './i18n.js';
 import { initialsOf } from './icons.js';
+import { loc } from './loc.js';
 
 /** Kinder ersetzen und dabei leere Werte (null/false) auslassen */
 export function fill(el, ...kids) {
@@ -186,17 +187,14 @@ function flame(lit = true, dur = 10) {
 
 export function stationTitle(db, stId) {
   const st = STATION_BY_ID[stId];
-  const li = getLang() === 'de' ? 1 : 0;
-  if (stId === 'inventory') return (db.ui['container.crafting'] || ['Crafting', 'Handwerk'])[li];
-  const k = st.title;
-  return (db.ui[k] || [k, k])[li];
+  const k = stId === 'inventory' ? 'container.crafting' : st.title;
+  return loc(db.ui[k] || [k, k], 'ui', k, getLang());
 }
 
 export function stationName(db, stId) {
   if (stId === 'inventory') return t('inventory');
   const st = STATION_BY_ID[stId];
-  const li = getLang() === 'de' ? 1 : 0;
-  return (db.ui[st.name] || [stId, stId])[li];
+  return loc(db.ui[st.name] || [stId, stId], 'ui', st.name, getLang());
 }
 
 /** Werkbank 3×3 bzw. Inventar 2×2 */
@@ -391,7 +389,7 @@ export function notes(ctx, r, { grid = 3, plan = null } = {}) {
     const lang = getLang();
     for (const [eid, dur] of r.out.extra.stew) {
       const e = db.effects[eid];
-      out.push(chip(`${t('effects')}: ${e ? e.n[lang === 'de' ? 1 : 0] : eid} (${fmtSeconds(dur / 20)})`, 'info'));
+      out.push(chip(`${t('effects')}: ${e ? loc(e.n, 'effects', eid, lang) : eid} (${fmtSeconds(dur / 20)})`, 'info'));
     }
   }
   return out.length ? h('div', { class: 'notes' }, out) : null;

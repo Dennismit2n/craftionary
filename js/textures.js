@@ -96,7 +96,7 @@ async function download(meta, progress) {
   if (meta.clientSha1 && crypto.subtle) {
     const h = await crypto.subtle.digest('SHA-1', out);
     const hex = [...new Uint8Array(h)].map((b) => b.toString(16).padStart(2, '0')).join('');
-    if (hex !== meta.clientSha1) throw new Error('Prüfsumme stimmt nicht – Download beschädigt');
+    if (hex !== meta.clientSha1) throw codeError('CHECKSUM', 'Prüfsumme stimmt nicht, Download beschädigt');
   }
   return out;
 }
