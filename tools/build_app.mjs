@@ -127,7 +127,7 @@ const head = `<!doctype html>
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#20262b">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f8f7">
 <meta name="color-scheme" content="light dark">
-<script>try{var t=JSON.parse(localStorage.getItem('craftionary.theme'));if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}
+<script>try{var r=document.documentElement,m=window.matchMedia,v=localStorage.getItem('werkstatt.darstellung'),t=null,s=null;if(!v)v=JSON.parse(localStorage.getItem('craftionary.theme'));if(v==='light'||v==='dark')t=v;else if(v==='hc-dark'||v==='hc-light'){t=v.slice(3);s='contrast'}else if(v==='cvd-dark'||v==='cvd-light'){t=v.slice(4);s='cvd'}else if(v==='invert')s='invert';else if(typeof v==='string'&&/dark/.test(v))t='dark';else if(typeof v==='string'&&/light/.test(v))t='light';else if(m&&m('(prefers-contrast: more)').matches){t=m('(prefers-color-scheme: dark)').matches?'dark':'light';s='contrast'}if(t)r.setAttribute('data-theme',t);if(s)r.setAttribute('data-vision',s)}catch(e){}
 addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.cfInstall=e;if(window.cfOnInstall)window.cfOnInstall()});</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">

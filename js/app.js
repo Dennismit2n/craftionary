@@ -28,6 +28,36 @@ const GLYPH_OF = { crafting: 'crafting', inventory: 'inventory', furnace: 'furna
   campfire: 'campfire', stonecutter: 'stonecutter', smithing: 'smithing', brewing: 'brewing' };
 const roman = (n) => (n > 10 ? String(n) : ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][n]);
 const THEME_COLOR ={ light: '#f6f8f7', dark: '#20262b' }; // Browserleiste, passend zu --surface
+// Sehhilfen der Werkstatt (31.10.2026): Die Darstellung gilt in allen Werkzeugen auf diesem
+// Ursprung und liegt ROH unter werkstatt.darstellung (die anderen Werkzeuge lesen sie so);
+// craftionary.theme (JSON) bleibt Rückfall. data-theme trägt hell/dunkel, data-vision Hoher
+// Kontrast (contrast), Farbenblind (cvd) und Umkehr (invert). Dieselbe Auflösung steht im
+// Kopf-Skript (tools/build_app.mjs).
+const SHARED_THEME = 'werkstatt.darstellung';
+const THEMES = ['system', 'light', 'dark', 'hc-dark', 'hc-light', 'cvd-dark', 'cvd-light', 'invert'];
+const THEME_KEYS = { system: 'themeSystem', light: 'themeLight', dark: 'themeDark', 'hc-dark': 'themeHcDark', 'hc-light': 'themeHcLight', 'cvd-dark': 'themeCvdDark', 'cvd-light': 'themeCvdLight', invert: 'themeInvert' };
+const HC_COLOR = { light: '#ffffff', dark: '#000000' };
+const INV_COLOR = { light: '#090708', dark: '#dfd9d4' }; // THEME_COLOR umgedreht, wie die Seite bei Umkehr
+function toTheme(v) {
+  if (THEMES.includes(v)) return v;
+  if (typeof v === 'string' && v.includes('dark')) return 'dark';
+  if (typeof v === 'string' && v.includes('light')) return 'light';
+  return 'system';
+}
+function storedTheme() {
+  let shared = null;
+  try { shared = localStorage.getItem(SHARED_THEME); } catch { /* gesperrt */ }
+  return toTheme(shared || LS.get('theme', 'system'));
+}
+function resolveTheme(choice) {
+  const media = (q) => matchMedia(q).matches;
+  if (choice === 'light' || choice === 'dark') return { theme: choice, vision: null };
+  if (choice === 'hc-dark' || choice === 'hc-light') return { theme: choice.slice(3), vision: 'contrast' };
+  if (choice === 'cvd-dark' || choice === 'cvd-light') return { theme: choice.slice(4), vision: 'cvd' };
+  if (choice === 'invert') return { theme: null, vision: 'invert' };
+  if (media('(prefers-contrast: more)')) return { theme: media('(prefers-color-scheme: dark)') ? 'dark' : 'light', vision: 'contrast' };
+  return { theme: null, vision: null };
+}
 const TEX_OF = { crafting: 'crafting_table', inventory: 'chest', furnace: 'furnace', blast_furnace: 'blast_furnace', smoker: 'smoker',
   campfire: 'campfire', stonecutter: 'stonecutter', smithing: 'smithing_table', brewing: 'brewing_stand' };
 
@@ -46,7 +76,7 @@ class App {
 
   // ======================================================================= Start
   async start() {
-    this.applyTheme(LS.get('theme', 'system'));
+    this.applyTheme(storedTheme());
     setLang(detectLang());
     document.documentElement.lang = getLang();
     this.renderStatic();
@@ -145,19 +175,32 @@ class App {
 
   applyTheme(choice) {
     const root = document.documentElement;
-    const fixed = choice === 'light' || choice === 'dark';
-    if (fixed) root.dataset.theme = choice;
+    const { theme, vision } = resolveTheme(toTheme(choice));
+    if (theme) root.dataset.theme = theme;
     else delete root.dataset.theme;
+    if (vision) root.dataset.vision = vision;
+    else delete root.dataset.vision;
     for (const m of document.querySelectorAll('meta[name="theme-color"]')) {
-      m.content = fixed ? THEME_COLOR[choice] : /dark/.test(m.getAttribute('media') || '') ? THEME_COLOR.dark : THEME_COLOR.light;
+      const tone = theme || (/dark/.test(m.getAttribute('media') || '') ? 'dark' : 'light');
+      m.content = (vision === 'contrast' ? HC_COLOR : vision === 'invert' ? INV_COLOR : THEME_COLOR)[tone];
     }
   }
 
   setTheme(choice) {
-    LS.set('theme', choice);
+    try { localStorage.setItem(SHARED_THEME, choice); } catch { /* gesperrt: gilt nur bis zum Neuladen */ }
     this.applyTheme(choice);
     this.renderStatic();
     if (this.$('#settings').open) this.renderSettings();
+  }
+
+  // Der Knopf im Kopf tauscht hell und dunkel innerhalb des gewählten Modus: Hoher Kontrast
+  // bleibt Hoher Kontrast, Farbenblind bleibt Farbenblind; Umkehr und System werden zu Hell/Dunkel.
+  toggleTheme() {
+    const next = this.effectiveTheme() === 'dark' ? 'light' : 'dark';
+    const cur = storedTheme();
+    if (cur.startsWith('hc-')) this.setTheme('hc-' + next);
+    else if (cur.startsWith('cvd-')) this.setTheme('cvd-' + next);
+    else this.setTheme(next);
   }
 
   renderHotbar() {
@@ -402,8 +445,9 @@ class App {
     // Vorschau aus den Original-Texturen (Banner- und Schild-Vorderseite)
     let prev;
     if (this.icons.hasPatterns) {
-      const cvB = h('canvas', { class: 'pat-cv pat-cv--banner', width: 20, height: 40 });
-      const cvS = h('canvas', { class: 'pat-cv pat-cv--shield', width: 12, height: 22 });
+      // data-echt: Bei „Umgekehrte Farben“ zeigen Banner und Schild die gewählten Farben echt
+      const cvB = h('canvas', { class: 'pat-cv pat-cv--banner', width: 20, height: 40, 'data-echt': '' });
+      const cvS = h('canvas', { class: 'pat-cv pat-cv--shield', width: 12, height: 22, 'data-echt': '' });
       const label = [db.name(`${d.base}_banner`, lang), ...d.layers.map((l) => patternName(pat, l.p, l.c, lang))].join(', ');
       prev = h('div', { class: 'pat-prev', role: 'img', 'aria-label': `${t('patPreview')}: ${label}` },
         h('figure', null, cvB, h('figcaption', null, db.name(`${d.base}_banner`, lang))),
@@ -981,8 +1025,18 @@ class App {
     document.addEventListener('click', (e) => { if (!e.target.closest('#search-form')) this.closeSuggest(); });
     this.$('#btn-lang').addEventListener('click', () => this.setLanguage(getLang() === 'de' ? 'en' : 'de'));
     this.$('#btn-settings').addEventListener('click', () => this.openSettings());
-    this.$('#btn-theme').addEventListener('click', () => this.setTheme(this.effectiveTheme() === 'dark' ? 'light' : 'dark'));
-    matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => this.renderStatic());
+    this.$('#btn-theme').addEventListener('click', () => this.toggleTheme());
+    // „System“ folgt dem Gerät live, auch bei „Kontrast erhöhen“; eine Wahl in einem anderen
+    // Werkzeug-Tab der Werkstatt gilt sofort auch hier
+    const follow = () => { if (storedTheme() === 'system') this.applyTheme('system'); this.renderStatic(); };
+    matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', follow);
+    matchMedia('(prefers-contrast: more)').addEventListener?.('change', follow);
+    window.addEventListener('storage', (e) => {
+      if (e.key !== SHARED_THEME) return;
+      this.applyTheme(storedTheme());
+      this.renderStatic();
+      if (this.$('#settings').open) this.renderSettings();
+    });
     this.$('#brand').addEventListener('click', (e) => { e.preventDefault(); this.stack = []; this.go({ kind: 'home' }, ''); });
     window.addEventListener('hashchange', () => this.route());
     document.addEventListener('keydown', (e) => {
@@ -1176,11 +1230,15 @@ class App {
       h('h3', null, t('language')),
       h('div', { class: 'seg', role: 'group' },
         ['de', 'en'].map((l) => h('button', { type: 'button', class: lang === l ? 'is-on' : '', 'aria-pressed': lang === l ? 'true' : 'false', onClick: () => { this.setLanguage(l); this.renderSettings(); this.$('#settings-title').textContent = t('settings'); this.$('#settings-close').textContent = t('close'); } }, l === 'de' ? 'Deutsch' : 'English'))));
-    const theme = LS.get('theme', 'system');
+    // Acht Darstellungen passen nicht mehr in Segmentknöpfe: ein Auswahlfeld wie in den anderen Werkzeugen
+    const theme = storedTheme();
+    const themeSelect = h('select', { id: 'theme-select', class: 'select' },
+      THEMES.map((m) => h('option', { value: m, selected: theme === m ? 'selected' : null }, t(THEME_KEYS[m]))));
+    themeSelect.value = theme;
+    themeSelect.addEventListener('change', () => this.setTheme(themeSelect.value));
     const themeSection = h('section', { class: 'set-block' },
-      h('h3', null, t('theme')),
-      h('div', { class: 'seg', role: 'group', 'aria-label': t('theme') },
-        [['system', 'themeSystem'], ['light', 'themeLight'], ['dark', 'themeDark']].map(([m, key]) => h('button', { type: 'button', class: theme === m ? 'is-on' : '', 'aria-pressed': theme === m ? 'true' : 'false', onClick: () => this.setTheme(m) }, t(key)))));
+      h('h3', null, h('label', { for: 'theme-select' }, t('theme'))),
+      themeSelect);
     const install = this.installPrompt ? h('section', { class: 'set-block' }, h('button', { class: 'btn btn--accent', type: 'button', onClick: () => this.runInstall() }, t('install'))) : null;
     const about = h('section', { class: 'set-block' },
       h('h3', null, t('about')),

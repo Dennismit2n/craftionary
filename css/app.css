@@ -766,3 +766,90 @@ li.is-sel > .sg-row { box-shadow: inset 3px 0 0 var(--accent); }
   .gui-arrow--run::after { width: 100%; }
   .progress-bar { transition: none; }
 }
+
+/* ------------------------------------------------------------------ Sehhilfen der Werkstatt (31.10.2026)
+   Hoher Kontrast, Farbenblind und Umgekehrte Farben. Eine Wahl für alle Werkzeuge der Werkstatt
+   (werkstatt.darstellung, siehe app.js). data-theme trägt hell/dunkel wie bisher, data-vision
+   contrast, cvd oder invert. Die Blöcke oben bleiben, wie sie sind. */
+
+/* Hoher Kontrast dunkel: Schwarz, Schrift #E0E0E0 (15,91:1); Kupfer, Patina, Gut und Schlecht
+   halten auf Schwarz schon 7:1 */
+:root[data-vision="contrast"][data-theme="dark"] {
+  --bg: #000000;
+  --surface: #000000;
+  --surface-2: #121212;
+  --ink: #e0e0e0;
+  --muted: #c4c4c4;
+  --line: #a0a0a0;
+  --shadow: none;
+  color-scheme: dark;
+}
+/* Hoher Kontrast hell: Weiß, Schrift Schwarz, Farben auf 7:1 nachgedunkelt */
+:root[data-vision="contrast"][data-theme="light"] {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #efefef;
+  --ink: #000000;
+  --muted: #2b2b2b;
+  --line: #585757;
+  --accent: #893200;
+  --accent-ink: #ffffff;
+  --accent-soft: #f6e3d8;
+  --patina: #00594a;
+  --patina-soft: #dcefe9;
+  --good: #005b1c;
+  --bad: #991b0d;
+  --focus: #00594a;
+  --shadow: none;
+  --gui-text: #000000;
+}
+:root[data-vision="contrast"] { --gui-text: #000000; }
+:root[data-vision="contrast"][data-theme="light"] :is(.rarity-uncommon, .chip--rarity-uncommon) { color: #5d4d00; border-color: #5d4d00; }
+:root[data-vision="contrast"][data-theme="light"] :is(.rarity-rare, .chip--rarity-rare) { color: #005760; border-color: #005760; }
+:root[data-vision="contrast"][data-theme="light"] :is(.rarity-epic, .chip--rarity-epic) { color: #8a1586; border-color: #8a1586; }
+:root[data-vision="contrast"][data-theme="dark"] .chip--rarity-uncommon { color: #ffff55; border-color: #ffff55; }
+:root[data-vision="contrast"][data-theme="dark"] .chip--rarity-rare { color: #55ffff; border-color: #55ffff; }
+:root[data-vision="contrast"][data-theme="dark"] .chip--rarity-epic { color: #ff55ff; border-color: #ff55ff; }
+/* Ränder voll statt durchscheinend, kein Schein um das Suchfeld */
+:root[data-vision="contrast"] .chip--info { border-color: var(--patina); }
+:root[data-vision="contrast"] .chip--good { border-color: var(--good); }
+:root[data-vision="contrast"] .chip--bad { border-color: var(--bad); }
+:root[data-vision="contrast"] :is(.chip--fuel, .banner) { border-color: var(--accent); }
+:root[data-vision="contrast"] .linkish { text-decoration-color: currentColor; }
+:root[data-vision="contrast"] #q:focus { box-shadow: 0 0 0 2px var(--accent); }
+:root[data-vision="contrast"] #q::placeholder { opacity: 1; }
+/* Tooltip wie im Spiel, aber deckend und mit lesbaren Zusatzzeilen */
+:root[data-vision="contrast"] .tip { background: #100010; border-image: none; border-color: #5000ff; }
+:root[data-vision="contrast"] .tip-id { color: #aaaaaa; }
+:root[data-vision="contrast"] .tip-good { color: #8191ff; }
+:root[data-vision="contrast"] .tip-bad { color: #ff6864; }
+/* Ersatz-Kacheln ohne Textur: Buchstabe in Schriftfarbe auf dem Seitengrund, die Materialfarbe
+   bleibt als Rahmen. So hält jeder Buchstabe 7:1, egal wie hell das Material ist. */
+:root[data-vision="contrast"] .ico--fb { background: var(--surface-2); color: var(--ink); box-shadow: inset 0 0 0 3px var(--fb); }
+
+/* Farbenblind: Gut und Schlecht in Blau und Orange (Okabe-Ito) statt Grün und Rot */
+:root[data-vision="cvd"][data-theme="light"] {
+  --good: #0071b1;
+  --bad: #943f00;
+}
+:root[data-vision="cvd"][data-theme="dark"] {
+  --good: #56b4e9;
+  --bad: #e8743a;
+}
+
+/* Umgekehrte Farben wie der Farbfilter von Windows. Bilder, Texturen und die Farben
+   von Banner und Schild bleiben echt. */
+:root[data-vision="invert"] { filter: invert(1); }
+:root[data-vision="invert"] :is(img:not([src*=".svg"]), video, [data-echt]):not([data-echt] *) { filter: invert(1); }
+/* Im dunklen System wird aus dem dunklen Bild ein helles: Kupfer und Schlecht etwas heller
+   ansetzen, damit sie umgedreht 4,5:1 halten */
+@media (prefers-color-scheme: dark) {
+  :root[data-vision="invert"]:not([data-theme]) {
+    --accent: #fda071;
+    --bad: #ff9786;
+  }
+}
+@media print {
+  :root[data-vision="invert"],
+  :root[data-vision="invert"] :is(img:not([src*=".svg"]), video, [data-echt]):not([data-echt] *) { filter: none; }
+}
