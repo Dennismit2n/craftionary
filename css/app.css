@@ -358,7 +358,8 @@ li.is-sel > .sg-row { box-shadow: inset 3px 0 0 var(--accent); }
 /* ------------------------------------------------------------------ Item-Ansicht */
 .item-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: start; }
 .item-ico { --p: 4px; }
-.item-name { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.7rem, 4.6vw, 2.5rem); margin: 0; letter-spacing: .01em; }
+/* Lange Namen am Handy umbrechen statt über den Rand ragen: „Diamantschwert“ ist bei 320 px 234 px breit, Platz sind 198. Mit Silbentrennung, wo der Browser sie kann */
+.item-name { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.7rem, 4.6vw, 2.5rem); margin: 0; letter-spacing: .01em; overflow-wrap: break-word; hyphens: auto; }
 .item-sub { margin: 2px 0 0; font-weight: 700; color: var(--muted); }
 .item-other { margin: 6px 0 0; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
 .item-id { font-family: var(--font-mono); font-size: .85rem; padding: 2px 6px; border-radius: 5px; background: var(--surface-2); border: 1px solid var(--line); overflow-wrap: anywhere; }
