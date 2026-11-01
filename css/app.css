@@ -694,7 +694,10 @@ li.is-sel > .sg-row { box-shadow: inset 3px 0 0 var(--accent); }
 }
 .dlg--wide { width: min(680px, calc(100vw - 24px)); }
 .dlg::backdrop { background: rgb(10 14 16 / .55); }
-.dlg-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+/* Lange Titel („Einstellungen“, „Configurações“) und der Knopf passen bei 320 px nicht in eine Zeile:
+   der Knopf rutscht dann rechtsbündig darunter, statt aus dem Dialog zu ragen */
+.dlg-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.dlg-head > .btn { margin-left: auto; }
 .dlg-head h2 { margin: 0; font-family: var(--font-display); font-weight: 600; }
 .pick-list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 2px; max-height: 56vh; overflow: auto; }
 .pick-row { width: 100%; display: flex; align-items: center; gap: 10px; border: 0; background: transparent; padding: 6px 8px; border-radius: 8px; cursor: pointer; text-align: left; }

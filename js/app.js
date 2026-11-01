@@ -1279,7 +1279,9 @@ class App {
         fileInput,
         this.icons.available ? h('button', { class: 'btn btn--ghost', type: 'button', onClick: async () => { await this.icons.clear(); this.renderSettings(); } }, t('texturesRemove')) : null),
       preview ? h('p', { class: 'muted small' }, t('texturesPreview')) : h('p', { class: 'muted small' }, t('texturesMobileData', { mb })),
-      h('p', { class: 'muted small' }, t('texturesFileHint', { v: db.meta.version })),
+      // Der Pfad hat keine Leerzeichen und schob den Dialog am Handy seitlich: Umbruchstelle nach jedem \
+      h('p', { class: 'muted small' }, t('texturesFileHint', { v: db.meta.version }).split('\\')
+        .flatMap((part, i, all) => (i < all.length - 1 ? [part + '\\', h('wbr', null)] : [part]))),
       progress);
     // 14 Sprachen, jeweils in der eigenen Schrift und mit lang-Attribut, damit Vorleser sie richtig aussprechen
     const langSelect = h('select', { id: 'lang-select', class: 'select' },
