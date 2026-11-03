@@ -171,7 +171,6 @@
   "about": "À propos de Craftionary",
   "aboutText": "Craftionary connaît les {r} recettes de Minecraft Java {v}, lues directement dans les fichiers officiels du jeu : établi, fourneaux, feu de camp, tailleur de pierre, table de forge et alambic.",
   "disclaimer": "CECI N’EST PAS UN PRODUIT OFFICIEL MINECRAFT. NI APPROUVÉ PAR MOJANG OU MICROSOFT, NI ASSOCIÉ À EUX.",
-  "analytics": "Comptage anonyme des visites (GoatCounter, sans cookies).",
   "offlineReady": "Craftionary fonctionne désormais aussi hors ligne.",
   "updateReady": "Une nouvelle version est disponible.",
   "updateNow": "Mettre à jour",

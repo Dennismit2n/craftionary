@@ -328,7 +328,6 @@ class App {
     return h('footer', { class: 'about' },
       h('p', null, t('aboutText', { r: numberFmt(this.db.recipes.length), v: this.db.meta.version })),
       h('p', { class: 'muted small' }, t('keys')),
-      h('p', { class: 'muted small' }, t('analytics')),
       h('p', { class: 'disclaimer' }, t('disclaimer')));
   }
 
@@ -1307,7 +1306,6 @@ class App {
       h('p', null, t('aboutText', { r: numberFmt(db.recipes.length), v: db.meta.version })),
       h('p', { class: 'muted small' }, t('dataLine', { v: db.meta.version, dp: db.meta.dataPack, n: numberFmt(Object.keys(db.items).length), d: new Date(db.meta.built + 'T12:00:00').toLocaleDateString(lang === 'en' ? 'en-GB' : locale(lang), { day: 'numeric', month: 'long', year: 'numeric' }) })),
       h('p', { class: 'muted small' }, t('keys')),
-      h('p', { class: 'muted small' }, t('analytics')),
       h('p', { class: 'disclaimer' }, t('disclaimer')));
     fill(body, langSection, themeSection, texSection, install, about);
   }
