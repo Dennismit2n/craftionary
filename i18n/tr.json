@@ -171,6 +171,7 @@
   "about": "Craftionary hakkında",
   "aboutText": "Craftionary, Minecraft Java {v} sürümündeki {r} tarifin tamamını bilir ve bunları doğrudan resmî oyun dosyalarından okur: çalışma masası, ocaklar, kamp ateşi, taş yontma makinesi, demirci masası ve iksir tezgâhı.",
   "disclaimer": "RESMÎ BİR MINECRAFT ÜRÜNÜ DEĞİLDİR. MOJANG VEYA MICROSOFT TARAFINDAN ONAYLANMAMIŞTIR VE ONLARLA BAĞLANTILI DEĞİLDİR.",
+  "analytics": "Anonim ziyaret sayımı (GoatCounter, çerezsiz).",
   "offlineReady": "Craftionary artık çevrimdışı da çalışıyor.",
   "updateReady": "Yeni bir sürüm var.",
   "updateNow": "Güncelle",

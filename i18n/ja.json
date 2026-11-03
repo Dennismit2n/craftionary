@@ -171,6 +171,7 @@
   "about": "Craftionary について",
   "aboutText": "Craftionary は Minecraft Java {v} の全 {r} レシピを、公式のゲームファイルから直接読み込んでいます：作業台、かまど、焚き火、石切台、鍛冶台、醸造台。",
   "disclaimer": "MINECRAFT 公式の製品ではありません。MOJANG または MICROSOFT の承認を受けておらず、両社とは関係ありません。",
+  "analytics": "匿名のアクセス集計（GoatCounter、Cookieなし）。",
   "offlineReady": "Craftionary はオフラインでも使えるようになりました。",
   "updateReady": "新しいバージョンがあります。",
   "updateNow": "更新",

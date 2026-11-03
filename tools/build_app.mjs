@@ -40,6 +40,8 @@ const artJs = artBuild.outputFiles[0].text;
 
 // ------------------------------------------------------------------ Schriften & Daten
 cpSync(join(ROOT, 'fonts'), join(PWA, 'fonts'), { recursive: true });
+// GoatCounter (anonyme Zählung, wie die übrigen Werkzeuge): Kopie aus vendor/, nur in der PWA, nicht in der Vorschau
+cpSync(join(ROOT, 'vendor/count.js'), join(PWA, 'count.js'));
 mkdirSync(join(PWA, 'data'), { recursive: true });
 cpSync(join(ROOT, dataFile), join(PWA, dataFile));
 cpSync(join(ROOT, 'data/versions.json'), join(PWA, 'data/versions.json'));
@@ -156,6 +158,9 @@ addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.cfI
 <link rel="preload" href="${dataFile}" as="fetch" crossorigin>
 <link rel="stylesheet" href="app.css">
 <script type="module" src="app.js"></script>
+<!-- Zählung: GoatCounter, anonym und ohne Cookies, unter "Über Craftionary" offengelegt. Fester Titel,
+     damit die übersetzten Titel nicht als eigene Seiten zählen. Das gewählte Item steht im Anker und geht nie mit. -->
+<script data-goatcounter="https://dennis-mit-2n.goatcounter.com/count" data-goatcounter-settings='{"title": "craftionary"}' async src="count.js"></script>
 </head>
 <body>
 ${body}

@@ -86,6 +86,8 @@ Ohne `--version` nimmt das Skript das neueste Release. Es lädt Client- und Serv
 Code: MIT-Lizenz (siehe `LICENSE`). Schriften: Pixelify Sans und Atkinson Hyperlegible Next, beide SIL Open Font License (`fonts/`).
 Rezeptdaten und Item-Namen stammen aus Minecraft, © Mojang AB/Microsoft.
 
+Zählung: Die installierte App zählt Besuche anonym mit GoatCounter, ohne Cookies. `vendor/count.js` liegt als Kopie im Repository (ISC-Lizenz im Dateikopf), nach draußen geht nur der Zählaufruf mit festem Titel „craftionary“. Das gewählte Item steht im Anker der Adresse und wird nie mitgesendet.
+
 **KEIN OFFIZIELLES MINECRAFT-PRODUKT. NICHT VON MOJANG ODER MICROSOFT GENEHMIGT ODER MIT IHNEN VERBUNDEN.**
 
 ## English
@@ -127,5 +129,7 @@ node tools/build_enchants.mjs && node tools/build_sources.mjs && node tools/buil
 ### Legal
 
 Code: MIT license. Fonts: SIL Open Font License. Recipe data and item names come from Minecraft, © Mojang AB/Microsoft.
+
+Analytics: the hosted app counts visits anonymously with GoatCounter, without cookies. `vendor/count.js` is a copy kept in the repository (ISC license in its header); the only outgoing request is the count call with the fixed title “craftionary”. The chosen item lives in the URL fragment and is never sent.
 
 **NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT.**

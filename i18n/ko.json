@@ -171,6 +171,7 @@
   "about": "Craftionary 정보",
   "aboutText": "Craftionary는 Minecraft Java {v}의 레시피 {r}개를 공식 게임 파일에서 바로 읽어 모두 알고 있습니다: 제작대, 화로, 모닥불, 석재 절단기, 대장장이 작업대, 양조기.",
   "disclaimer": "공식 MINECRAFT 제품이 아닙니다. MOJANG 또는 MICROSOFT의 승인을 받지 않았으며 이들과 관련이 없습니다.",
+  "analytics": "익명 방문 집계 (GoatCounter, 쿠키 없음).",
   "offlineReady": "이제 Craftionary를 오프라인에서도 쓸 수 있습니다.",
   "updateReady": "새 버전이 있습니다.",
   "updateNow": "업데이트",

@@ -171,6 +171,7 @@
   "about": "О Craftionary",
   "aboutText": "Craftionary знает все рецепты Minecraft Java {v} ({r}), прочитанные прямо из официальных файлов игры: верстак, печи, костёр, камнерез, стол кузнеца и зельеварка.",
   "disclaimer": "НЕ ЯВЛЯЕТСЯ ОФИЦИАЛЬНЫМ ПРОДУКТОМ MINECRAFT. НЕ ОДОБРЕНО MOJANG ИЛИ MICROSOFT И НЕ СВЯЗАНО С НИМИ.",
+  "analytics": "Анонимный подсчёт посещений (GoatCounter, без файлов cookie).",
   "offlineReady": "Теперь Craftionary работает и без интернета.",
   "updateReady": "Доступна новая версия.",
   "updateNow": "Обновить",

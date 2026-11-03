@@ -171,6 +171,7 @@
   "about": "关于 Craftionary",
   "aboutText": "Craftionary 收录了 Minecraft Java {v} 的全部 {r} 个配方，直接读取自官方游戏文件：工作台、熔炉、营火、切石机、锻造台和酿造台。",
   "disclaimer": "非 MINECRAFT 官方产品。未经 MOJANG 或 MICROSOFT 批准，也与其无关。",
+  "analytics": "匿名访问统计（GoatCounter，无 Cookie）。",
   "offlineReady": "Craftionary 现在离线也能用。",
   "updateReady": "有新版本可用。",
   "updateNow": "更新",
