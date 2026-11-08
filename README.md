@@ -3,6 +3,10 @@
 Rezept-Kompendium für **Minecraft Java 26.3** als installierbare Web-App (PWA) für Handy, Tablet und Desktop.
 Recipe compendium for **Minecraft Java 26.3** as an installable web app (PWA) for phone, tablet and desktop. *(English below.)*
 
+**Live:** https://dennismit2n.github.io/craftionary/ · [Anleitung und Neuigkeiten](https://dennismit2n.github.io/werkstatt.html#craftionary)
+
+<img src="docs/screenshot-de.webp" alt="Drei Handy-Ansichten von Craftionary, dunkel: das Rezept für ein Leuchtfeuer im Werkbank-Fenster mit der Materialliste aus Glas, Netherstern und Obsidian; die Kurve der Erz-Vorkommen nach Höhe mit der besten Höhe; und die Muster-Werkstatt mit einem türkisen Banner und Schild samt Grundfarbe und Mustern." width="800">
+
 ## Deutsch
 
 ### Was es kann
@@ -16,7 +20,7 @@ Recipe compendium for **Minecraft Java 26.3** as an installable web app (PWA) fo
 | Rezeptbuch | Pro Station alle Rezepte mit Reitern und Filter, dazu „Selbst legen“: Items in die Felder legen, die App sagt, was rauskommt |
 | Materialliste | Direkt oder bis zu den Grundstoffen aufgelöst, inklusive Resten |
 | Befehle | Fertige `/give`-Befehle je Item, verzaubert auf Spiel-Maximum oder übertrieben, dazu das komplette Netherite-Set |
-| Fundorte | Erz-Höhen als Kurve mit bester Höhe, Block- und Kreatur-Drops, Truhen in Strukturen mit Biomen, Angeln, Handel – mit genauen Chancen |
+| Fundorte | Erz-Höhen als Kurve mit bester Höhe, Block- und Kreatur-Drops, Truhen in Strukturen mit Biomen, Angeln, Handel, mit genauen Chancen |
 | Muster | Banner und Schild am Webstuhl gestalten (bis zu 6 Muster, Vorschau, Arbeitsschritte, Befehl), Verzierten Krug aus Scherben zusammenstellen |
 | Bedienung | Hell/Dunkel mit einem Tipp in der Kopfzeile, 14 Sprachen (Deutsch, Englisch, Spanisch, Französisch, Italienisch, Niederländisch, Polnisch, Portugiesisch, Türkisch, Russisch, Hindi, Chinesisch, Japanisch, Koreanisch) in den Einstellungen |
 | Offline | Nach dem ersten Besuch funktioniert alles ohne Netz |
@@ -35,7 +39,7 @@ Die Icons bleiben nur auf deinem Gerät (IndexedDB) und lassen sich in den Einst
 
 ### Installieren
 
-| Gerät | So geht's |
+| Gerät | So geht’s |
 |---|---|
 | Android (Chrome) | Seite öffnen → Menü ⋮ → **App installieren** |
 | iPhone/iPad (Safari) | Seite öffnen → Teilen → **Zum Home-Bildschirm** |
@@ -80,6 +84,7 @@ Ohne `--version` nimmt das Skript das neueste Release. Es lädt Client- und Serv
 | `tools/build_app.mjs` | Build mit esbuild, Service Worker und Manifest |
 | `icons/` | App-Icons als PNG (eigenes Motiv: 3×3-Raster; neu erzeugen mit `npm i -D sharp`, dann die PNGs löschen und bauen) |
 | `dev/` | Prüfseiten für die Icon-Darstellung (brauchen eine lokale Jar unter `dev/jar/client.jar`) |
+| `docs/` | Bildschirmfotos für diese Seite |
 
 ### Rechtliches
 
@@ -89,6 +94,8 @@ Rezeptdaten und Item-Namen stammen aus Minecraft, © Mojang AB/Microsoft.
 **KEIN OFFIZIELLES MINECRAFT-PRODUKT. NICHT VON MOJANG ODER MICROSOFT GENEHMIGT ODER MIT IHNEN VERBUNDEN.**
 
 ## English
+
+<img src="docs/screenshot-en.webp" alt="Three phone screens of Craftionary, dark: the recipe for a beacon in the crafting table window with the material list of glass, nether star and obsidian; the curve of ore occurrence by height with the best level; and the pattern workshop with a turquoise banner and shield, base colour and patterns." width="800">
 
 ### Features
 
@@ -101,7 +108,7 @@ Rezeptdaten und Item-Namen stammen aus Minecraft, © Mojang AB/Microsoft.
 | Recipe book | All recipes per station with tabs and filter, plus “Place items”: put items in the slots and see what comes out |
 | Materials | Direct or broken down to raw materials, including leftovers |
 | Commands | Ready `/give` commands per item, enchanted to the game maximum or overpowered, plus the full netherite set |
-| Where to find | Ore heights as a curve with the best level, block and mob drops, structure chests with biomes, fishing, trading – with exact chances |
+| Where to find | Ore heights as a curve with the best level, block and mob drops, structure chests with biomes, fishing, trading, with exact chances |
 | Patterns | Design banners and shields at the loom (up to 6 patterns, preview, steps, command), arrange decorated pots from sherds |
 | Controls | Light/dark with one tap in the header, 14 languages (German, English, Spanish, French, Italian, Dutch, Polish, Portuguese, Turkish, Russian, Hindi, Chinese, Japanese, Korean) in the settings |
 | Offline | Works without a connection after the first visit |
