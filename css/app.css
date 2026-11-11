@@ -862,8 +862,9 @@ li.is-sel > .sg-row { box-shadow: inset 3px 0 0 var(--accent); }
    vier kleine Schrauben in Weißgold, wie die Kacheln der Startseite. Licht von rechts
    oben, darum fallen die Schatten nach links unten. Der Beschlag liegt als acht
    Hintergrund-Ebenen (--beschlag: vier Schrauben, vier Linien) vor dem eigenen Grund
-   jedes Bauteils. --bi Abstand des Rahmens von der Innenkante, --bg Schraubengröße,
-   --ba Abstand der Schraube vom Rahmen, --bl Linienfarbe. Gebaut mit einbau.py. */
+   jedes Bauteils. Die Namen beginnen mit bsl-, weil viele Werkzeuge --bg selbst
+   für ihre Hintergrundfarbe benutzen. --bsl-i Abstand des Rahmens von der Innenkante, --bsl-g Schraubengröße,
+   --bsl-a Abstand der Schraube vom Rahmen, --bsl-l Linienfarbe. Gebaut mit einbau.py. */
 :root {
   --schraube-1: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cdefs%3E%3CradialGradient id='s' cx='42%' cy='58%' r='50%'%3E%3Cstop offset='55%' stop-opacity='.6'/%3E%3Cstop offset='100%' stop-opacity='0'/%3E%3C/radialGradient%3E%3CradialGradient id='k' cx='66%' cy='30%' r='78%'%3E%3Cstop offset='0' stop-color='%23FFFFFF'/%3E%3Cstop offset='.2' stop-color='%23FFFCEE'/%3E%3Cstop offset='.5' stop-color='%23F1E4BC'/%3E%3Cstop offset='.8' stop-color='%23C4A964'/%3E%3Cstop offset='1' stop-color='%237A6226'/%3E%3C/radialGradient%3E%3ClinearGradient id='m' x1='1' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%238A6A22' stop-opacity='.55'/%3E%3Cstop offset='.5' stop-color='%23FFF3C4' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23FFFBEA' stop-opacity='.7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='5.1' cy='6.9' r='5' fill='url(%23s)'/%3E%3Ccircle cx='6' cy='6' r='4.3' fill='url(%23k)'/%3E%3Ccircle cx='6' cy='6' r='4.3' fill='none' stroke='%23553E0C' stroke-opacity='.6' stroke-width='.45'/%3E%3Ccircle cx='6' cy='6' r='2.9' fill='none' stroke='url(%23m)' stroke-width='.5'/%3E%3Cg transform='rotate(32 6 6)'%3E%3Cpath d='M2.5 6h7' stroke='%233A2A07' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M2.7 6.62h6.6' stroke='%23FFF7DA' stroke-opacity='.75' stroke-width='.3' stroke-linecap='round'/%3E%3C/g%3E%3Cellipse cx='7.7' cy='3.9' rx='1.05' ry='.6' transform='rotate(-35 7.7 3.9)' fill='%23FFFFFF' fill-opacity='.9'/%3E%3C/svg%3E");
   --schraube-2: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cdefs%3E%3CradialGradient id='s' cx='42%' cy='58%' r='50%'%3E%3Cstop offset='55%' stop-opacity='.6'/%3E%3Cstop offset='100%' stop-opacity='0'/%3E%3C/radialGradient%3E%3CradialGradient id='k' cx='66%' cy='30%' r='78%'%3E%3Cstop offset='0' stop-color='%23FFFFFF'/%3E%3Cstop offset='.2' stop-color='%23FFFCEE'/%3E%3Cstop offset='.5' stop-color='%23F1E4BC'/%3E%3Cstop offset='.8' stop-color='%23C4A964'/%3E%3Cstop offset='1' stop-color='%237A6226'/%3E%3C/radialGradient%3E%3ClinearGradient id='m' x1='1' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%238A6A22' stop-opacity='.55'/%3E%3Cstop offset='.5' stop-color='%23FFF3C4' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23FFFBEA' stop-opacity='.7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='5.1' cy='6.9' r='5' fill='url(%23s)'/%3E%3Ccircle cx='6' cy='6' r='4.3' fill='url(%23k)'/%3E%3Ccircle cx='6' cy='6' r='4.3' fill='none' stroke='%23553E0C' stroke-opacity='.6' stroke-width='.45'/%3E%3Ccircle cx='6' cy='6' r='2.9' fill='none' stroke='url(%23m)' stroke-width='.5'/%3E%3Cg transform='rotate(-58 6 6)'%3E%3Cpath d='M2.5 6h7' stroke='%233A2A07' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M2.7 6.62h6.6' stroke='%23FFF7DA' stroke-opacity='.75' stroke-width='.3' stroke-linecap='round'/%3E%3C/g%3E%3Cellipse cx='7.7' cy='3.9' rx='1.05' ry='.6' transform='rotate(-35 7.7 3.9)' fill='%23FFFFFF' fill-opacity='.9'/%3E%3C/svg%3E");
@@ -889,133 +890,133 @@ li.is-sel > .sg-row { box-shadow: inset 3px 0 0 var(--accent); }
 .banner,
 .note-line,
 .empty {
-  --bi: 2px;
-  --bg: 4.5px;
-  --ba: 1px;
-  --bl: currentColor;
+  --bsl-i: 2px;
+  --bsl-g: 4.5px;
+  --bsl-a: 1px;
+  --bsl-l: currentColor;
   --beschlag:
-    var(--schraube-1) left calc(var(--bi) + var(--ba)) top calc(var(--bi) + var(--ba)) / var(--bg) var(--bg) no-repeat,
-    var(--schraube-2) right calc(var(--bi) + var(--ba)) top calc(var(--bi) + var(--ba)) / var(--bg) var(--bg) no-repeat,
-    var(--schraube-3) left calc(var(--bi) + var(--ba)) bottom calc(var(--bi) + var(--ba)) / var(--bg) var(--bg) no-repeat,
-    var(--schraube-4) right calc(var(--bi) + var(--ba)) bottom calc(var(--bi) + var(--ba)) / var(--bg) var(--bg) no-repeat,
-    linear-gradient(var(--bl), var(--bl)) center top var(--bi) / calc(100% - 2 * var(--bi)) 1px no-repeat,
-    linear-gradient(var(--bl), var(--bl)) center bottom var(--bi) / calc(100% - 2 * var(--bi)) 1px no-repeat,
-    linear-gradient(var(--bl), var(--bl)) left var(--bi) center / 1px calc(100% - 2 * var(--bi)) no-repeat,
-    linear-gradient(var(--bl), var(--bl)) right var(--bi) center / 1px calc(100% - 2 * var(--bi)) no-repeat;
+    var(--schraube-1) left calc(var(--bsl-i) + var(--bsl-a)) top calc(var(--bsl-i) + var(--bsl-a)) / var(--bsl-g) var(--bsl-g) no-repeat,
+    var(--schraube-2) right calc(var(--bsl-i) + var(--bsl-a)) top calc(var(--bsl-i) + var(--bsl-a)) / var(--bsl-g) var(--bsl-g) no-repeat,
+    var(--schraube-3) left calc(var(--bsl-i) + var(--bsl-a)) bottom calc(var(--bsl-i) + var(--bsl-a)) / var(--bsl-g) var(--bsl-g) no-repeat,
+    var(--schraube-4) right calc(var(--bsl-i) + var(--bsl-a)) bottom calc(var(--bsl-i) + var(--bsl-a)) / var(--bsl-g) var(--bsl-g) no-repeat,
+    linear-gradient(var(--bsl-l), var(--bsl-l)) center top var(--bsl-i) / calc(100% - 2 * var(--bsl-i)) 1px no-repeat,
+    linear-gradient(var(--bsl-l), var(--bsl-l)) center bottom var(--bsl-i) / calc(100% - 2 * var(--bsl-i)) 1px no-repeat,
+    linear-gradient(var(--bsl-l), var(--bsl-l)) left var(--bsl-i) center / 1px calc(100% - 2 * var(--bsl-i)) no-repeat,
+    linear-gradient(var(--bsl-l), var(--bsl-l)) right var(--bsl-i) center / 1px calc(100% - 2 * var(--bsl-i)) no-repeat;
 }
 @supports (color: color-mix(in srgb, red 50%, transparent)) {
-  #q { --bl: color-mix(in srgb, var(--accent) 45%, transparent); }
+  #q { --bsl-l: color-mix(in srgb, var(--accent) 45%, transparent); }
 }
 #q {
-  --bi: 3px;
-  --bg: 4.5px;
-  --ba: 1px;
+  --bsl-i: 3px;
+  --bsl-g: 4.5px;
+  --bsl-a: 1px;
   background: var(--beschlag), var(--bg);
 }
 @supports (color: color-mix(in srgb, red 50%, transparent)) {
-  .icon-btn { --bl: color-mix(in srgb, var(--accent) 45%, transparent); }
+  .icon-btn { --bsl-l: color-mix(in srgb, var(--accent) 45%, transparent); }
 }
 .icon-btn {
-  --bi: 2px;
-  --bg: 4px;
-  --ba: 0.5px;
+  --bsl-i: 2px;
+  --bsl-g: 4px;
+  --bsl-a: 0.5px;
   background: var(--beschlag), transparent;
 }
 @supports (color: color-mix(in srgb, red 50%, transparent)) {
-  .btn { --bl: color-mix(in srgb, var(--accent) 45%, transparent); }
+  .btn { --bsl-l: color-mix(in srgb, var(--accent) 45%, transparent); }
 }
 .btn {
-  --bi: 2.5px;
-  --bg: 4px;
-  --ba: 0.5px;
+  --bsl-i: 2.5px;
+  --bsl-g: 4px;
+  --bsl-a: 0.5px;
   background: var(--beschlag), var(--surface);
   box-shadow: -3px 4px 8px -4px rgba(0, 0, 0, 0.5);
 }
 .btn--accent { background: var(--beschlag), var(--accent); }
 .btn--ghost { background: var(--beschlag), transparent; }
 @supports (color: color-mix(in srgb, red 50%, transparent)) {
-  .input, .select, .qty-in, .pat-layer select, .pot-side select { --bl: color-mix(in srgb, var(--accent) 45%, transparent); }
+  .input, .select, .qty-in, .pat-layer select, .pot-side select { --bsl-l: color-mix(in srgb, var(--accent) 45%, transparent); }
 }
 .input,
 .select,
 .qty-in,
 .pat-layer select,
 .pot-side select {
-  --bi: 2.5px;
-  --bg: 4px;
-  --ba: 0.5px;
+  --bsl-i: 2.5px;
+  --bsl-g: 4px;
+  --bsl-a: 0.5px;
   background: var(--beschlag), var(--bg);
 }
 @supports (color: color-mix(in srgb, red 50%, transparent)) {
-  .st-tile { --bl: color-mix(in srgb, var(--accent) 45%, transparent); }
+  .st-tile { --bsl-l: color-mix(in srgb, var(--accent) 45%, transparent); }
 }
 .st-tile {
-  --bi: 3px;
-  --bg: 4.5px;
-  --ba: 1px;
+  --bsl-i: 3px;
+  --bsl-g: 4.5px;
+  --bsl-a: 1px;
   background: var(--beschlag), var(--surface);
   box-shadow: -3px 4px 8px -4px rgba(0, 0, 0, 0.5);
 }
 @supports (color: color-mix(in srgb, red 50%, transparent)) {
-  .rc, .materials, .sandbox { --bl: color-mix(in srgb, var(--accent) 45%, transparent); }
+  .rc, .materials, .sandbox { --bsl-l: color-mix(in srgb, var(--accent) 45%, transparent); }
 }
 .rc,
 .materials,
 .sandbox {
-  --bi: 4px;
-  --bg: 6px;
-  --ba: 1.5px;
+  --bsl-i: 4px;
+  --bsl-g: 6px;
+  --bsl-a: 1.5px;
   background: var(--beschlag), var(--surface);
   box-shadow: -6px 8px 18px -8px rgba(0, 0, 0, 0.42);
 }
 @supports (color: color-mix(in srgb, red 50%, transparent)) {
-  .cmd-box, .pat-box { --bl: color-mix(in srgb, var(--accent) 45%, transparent); }
+  .cmd-box, .pat-box { --bsl-l: color-mix(in srgb, var(--accent) 45%, transparent); }
 }
 .cmd-box,
 .pat-box {
-  --bi: 3.5px;
-  --bg: 6px;
-  --ba: 1.5px;
+  --bsl-i: 3.5px;
+  --bsl-g: 6px;
+  --bsl-a: 1.5px;
   background: var(--beschlag), var(--surface);
   box-shadow: -6px 8px 18px -8px rgba(0, 0, 0, 0.42);
 }
 @supports (color: color-mix(in srgb, red 50%, transparent)) {
-  .book { --bl: color-mix(in srgb, var(--accent) 45%, transparent); }
+  .book { --bsl-l: color-mix(in srgb, var(--accent) 45%, transparent); }
 }
 .book {
-  --bi: 4px;
-  --bg: 6px;
-  --ba: 1.5px;
+  --bsl-i: 4px;
+  --bsl-g: 6px;
+  --bsl-a: 1.5px;
   background: var(--beschlag), var(--surface);
   box-shadow: -6px 8px 18px -8px rgba(0, 0, 0, 0.42);
 }
 @supports (color: color-mix(in srgb, red 50%, transparent)) {
-  .dlg { --bl: color-mix(in srgb, var(--accent) 45%, transparent); }
+  .dlg { --bsl-l: color-mix(in srgb, var(--accent) 45%, transparent); }
 }
 .dlg {
-  --bi: 5px;
-  --bg: 7px;
-  --ba: 2px;
+  --bsl-i: 5px;
+  --bsl-g: 7px;
+  --bsl-a: 2px;
   background: var(--beschlag), var(--surface);
   box-shadow: -12px 14px 30px -6px rgba(0, 0, 0, 0.34);
 }
 @supports (color: color-mix(in srgb, red 50%, transparent)) {
-  .banner { --bl: color-mix(in srgb, var(--accent) 45%, transparent); }
+  .banner { --bsl-l: color-mix(in srgb, var(--accent) 45%, transparent); }
 }
 .banner {
-  --bi: 3px;
-  --bg: 4.5px;
-  --ba: 1px;
+  --bsl-i: 3px;
+  --bsl-g: 4.5px;
+  --bsl-a: 1px;
   background: var(--beschlag), var(--accent-soft);
 }
 @supports (color: color-mix(in srgb, red 50%, transparent)) {
-  .note-line, .empty { --bl: color-mix(in srgb, var(--accent) 45%, transparent); }
+  .note-line, .empty { --bsl-l: color-mix(in srgb, var(--accent) 45%, transparent); }
 }
 .note-line,
 .empty {
-  --bi: 3px;
-  --bg: 4.5px;
-  --ba: 1px;
+  --bsl-i: 3px;
+  --bsl-g: 4.5px;
+  --bsl-a: 1px;
   background: var(--beschlag), var(--surface);
 }
 /* Hoher Kontrast kennt keine Schatten, der Beschlag bleibt. Gedruckt wird ohne beides. */
