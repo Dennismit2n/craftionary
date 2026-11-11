@@ -5,7 +5,7 @@ Recipe compendium for **Minecraft Java 26.3** as an installable web app (PWA) fo
 
 **Live:** https://dennismit2n.github.io/craftionary/ · [Anleitung und Neuigkeiten](https://dennismit2n.github.io/werkstatt.html#craftionary)
 
-<img src="docs/screenshot-de.webp" alt="Drei Handy-Ansichten von Craftionary, dunkel: das Rezept für ein Leuchtfeuer im Werkbank-Fenster mit der Materialliste aus Glas, Netherstern und Obsidian; die Kurve der Erz-Vorkommen nach Höhe mit der besten Höhe; und die Muster-Werkstatt mit einem türkisen Banner und Schild samt Grundfarbe und Mustern." width="800">
+<img src="docs/screenshot-de.webp" alt="Drei Handy-Ansichten von Craftionary, dunkel: das Rezept für ein Leuchtfeuer im Werkbank-Fenster mit der Materialliste aus Glas, Netherstern und Obsidian; die Kurve der Erz-Vorkommen nach Höhe mit der besten Höhe; und die Muster-Werkstatt mit türkiser Grundfarbe und drei Mustern." width="800">
 
 ## Deutsch
 
@@ -95,7 +95,7 @@ Rezeptdaten und Item-Namen stammen aus Minecraft, © Mojang AB/Microsoft.
 
 ## English
 
-<img src="docs/screenshot-en.webp" alt="Three phone screens of Craftionary, dark: the recipe for a beacon in the crafting table window with the material list of glass, nether star and obsidian; the curve of ore occurrence by height with the best level; and the pattern workshop with a turquoise banner and shield, base colour and patterns." width="800">
+<img src="docs/screenshot-en.webp" alt="Three phone screens of Craftionary, dark: the recipe for a beacon in the crafting table window with the material list of glass, nether star and obsidian; the curve of ore occurrence by height with the best level; and the pattern workshop with turquoise as the base colour and three patterns." width="800">
 
 ### Features
 
